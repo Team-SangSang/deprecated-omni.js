@@ -8,7 +8,7 @@ Omnigram.Element = {};
     var PADDING_X = 30;
     var PADDING_Y = 30;    
     var SPACE_X = 40;
-    var SPACE_Y = 40;
+    var SPACE_Y = 15;
 
     // 라인 길이
     var LINE_THICKNESS = 10;
@@ -43,16 +43,40 @@ Omnigram.Element = {};
 
         // 프로시저 추가
     	Workspace.prototype.addProcedure = function () {
-            var line = new Omnigram.Element.Line();
-
+            var line =  new Omnigram.Element.Line();
+            var line2 =  new Omnigram.Element.Line();
+            console.log(line.getUniqueValue())
+            console.log(line2.getUniqueValue())
             procedures.push(line);
             layer[0].addChild(line.getGraphics());
+
+            this.update();
+
+
+
+            for (var i = 0; i < 0; i++) {
+               var block = new Omnigram.Element.Block();
+                layer[0].addChild(block.getGraphics());
+                line.addElement(block);
+            };
+
+
+            var fork = new Omnigram.Element.Branch(true);
+            layer[0].addChild(fork.getGraphics());
+          //  line.addElement(fork);
+
+            for (var i = 0; i < 0; i++) {
+               var block = new Omnigram.Element.Block();
+                layer[0].addChild(block.getGraphics());
+                line.addElement(block);
+            };
+            
 
             // 프로시저 마우스 이벤트
             line.getGraphics().mouseover = procedureMouseOver(line);
             line.getGraphics().mouseout = procedureMouseOut(line);
 
-            this.update();
+            
     	}
 
         // 프로시저 삭제
@@ -77,8 +101,9 @@ Omnigram.Element = {};
 
                 var procedure = procedures[i];
 
-                procedure.setX(accumulatedWidth, true);
-                procedure.setY(PADDING_Y, true);
+                procedure.setX(accumulatedWidth);
+                procedure.setY(PADDING_Y);
+                procedure.update();
 
                 accumulatedWidth += procedure.getWidth() + SPACE_X;
             }
@@ -86,7 +111,7 @@ Omnigram.Element = {};
             // 여백이 남으면 레이어를 중앙에 정렬
             var totalWidth = accumulatedWidth - SPACE_X + PADDING_X;
             if(totalWidth < renderer.width) {
-                layer[0].x = (renderer.width - totalWidth) / 2;
+              //  layer[0].x = (renderer.width - totalWidth) / 2;
             }
     	}
 
@@ -125,10 +150,14 @@ Omnigram.Element = {};
     // block
     Omnigram.Element.Block = (function() {
 
+        var parent;
         var graphics;
 
         function Block(){
-            graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("block.png")); 
+            graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("block.png"));
+        }
+
+        Block.prototype.update = function () {
         }
 
         Block.prototype.getWidth = function () {
@@ -138,6 +167,14 @@ Omnigram.Element = {};
         Block.prototype.getHeight = function () {
             return graphics.height;
         }
+
+        Block.prototype.getX = function () { return graphics.x; }
+        Block.prototype.getY = function () { return graphics.y; }
+        Block.prototype.setX = function (x) { graphics.x = x; }
+        Block.prototype.setY = function (y) { graphics.y = y; }
+
+        Block.prototype.getParent = function () { return parent; }
+        Block.prototype.setParent = function (element) { parent = element; }
 
         Block.prototype.getGraphics = function () { return graphics; }
 
@@ -155,6 +192,7 @@ Omnigram.Element = {};
         var line;
         var horizontal_top;
         var horizontal_bottom;
+        var ssss;
 
         var orientation
         var graphics;
@@ -169,20 +207,23 @@ Omnigram.Element = {};
             horizontal_top = new Omnigram.Element.HelperLine(true);
             horizontal_bottom = new Omnigram.Element.HelperLine(true);
 
+            ssss = new Omnigram.Element.HelperLine(false);
+
             graphics = new PIXI.DisplayObjectContainer();
             graphics.addChild(horizontal_top.getGraphics());
             graphics.addChild(horizontal_bottom.getGraphics());
             graphics.addChild(line.getGraphics());
+            graphics.addChild(ssss.getGraphics());
             graphics.addChild(entry.getGraphics());
 
             //entry.getGraphics()
-            line.getGraphics().mouseover = highlightLine(true);
-            horizontal_top.getGraphics().mouseover = highlightLine(true);
-            horizontal_bottom.getGraphics().mouseover = highlightLine(true);
+            line.getGraphics().mouseover = this.highlightLine(true);
+            horizontal_top.getGraphics().mouseover = this.highlightLine(true);
+            horizontal_bottom.getGraphics().mouseover = this.highlightLine(true);
 
-            line.getGraphics().mouseout = highlightLine(false);
-            horizontal_top.getGraphics().mouseout = highlightLine(false);
-            horizontal_bottom.getGraphics().mouseout = highlightLine(false);
+            line.getGraphics().mouseout = this.highlightLine(false);
+            horizontal_top.getGraphics().mouseout = this.highlightLine(false);
+            horizontal_bottom.getGraphics().mouseout = this.highlightLine(false);
 
             this.update();
         }
@@ -195,7 +236,7 @@ Omnigram.Element = {};
             var hbGraphic = horizontal_bottom.getGraphics();
 
             entryGraphic.x = - entryGraphic.width / 2;
-            entryGraphic.y = y;
+            entryGraphic.y = 0;
 
             // 오른쪽
             if (orientation == true) {
@@ -207,6 +248,16 @@ Omnigram.Element = {};
                 hbGraphic.width = htGraphic.width;
                 hbGraphic.x = 0;
                 hbGraphic.y = htGraphic.y + line.getHeight();
+
+                htGraphic.x = 100
+                htGraphic.y = 100;
+
+                hbGraphic.x = 300;
+                hbGraphic.y = 300;
+
+                console.log(horizontal_bottom.getUniqueValue());
+                console.log(line.getUniqueValue());
+
 
                 vGraphic.x = htGraphic.width;
                 vGraphic.y = htGraphic.y;
@@ -228,7 +279,7 @@ Omnigram.Element = {};
         }
 
         Branch.prototype.highlightEntry = function (on) {
-            highlightLine(on);            
+            this.highlightLine(on);            
         }
 
         Branch.prototype.highlightLine = function (on) {
@@ -242,6 +293,19 @@ Omnigram.Element = {};
                 horizontal_bottom.highlight(false);
             }
         }
+
+        Branch.prototype.getWidth = function () {
+            return graphics.width;
+        }
+
+        Branch.prototype.getHeight = function () {
+            return horizontal_bottom.getGraphics().y;
+        }
+
+        Branch.prototype.getX = function () { return graphics.x; }
+        Branch.prototype.getY = function () { return graphics.y; }
+        Branch.prototype.setX = function (x) { graphics.x = x; }
+        Branch.prototype.setY = function (y) { graphics.y = y; }
 
         Branch.prototype.getOrientation = function () { return orientation; }
         Branch.prototype.setOrientation = function (orientation_) { orientation = orientation_; this.update(); }
@@ -269,12 +333,16 @@ Omnigram.Element = {};
     Omnigram.Element.Line = (function() {
 
         var parent;
-        var children;
+        var elements;
 
         // 그래픽
         var graphics;
 
+        var unique;
+        
+
         function Line(){
+             unique = Math.random() * 1000000;
 
             graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("vertical-line.png"));            
 
@@ -283,17 +351,56 @@ Omnigram.Element = {};
 
             graphics.interactive = true;
 
-            children = [];
+            elements = [];
+        }
+Line.prototype.getUniqueValue = function() { return unique }
+        Line.prototype.addElement = function (element) {
+            elements.push(element);
+            element.setParent(this);
+
+            this.update();
         }
 
-        Line.prototype.addElement = function (element) {
-            graphics.push(element);
+
+        Line.prototype.addElementAt = function (element, index) {
+            elements.splice(index, 0, element);
             element.setParent(this);
+
             this.update();
         }
 
         Line.prototype.update = function () {
+
             // 엘리먼트 정렬
+            var relativeX = graphics.x + LINE_THICKNESS / 2;
+            var relativeY = graphics.y;
+
+            var accumulatedHeight = SPACE_Y;
+
+            for (var i = 0; i < elements.length; i++) {
+
+                var child = elements[i];
+
+                if (child instanceof Omnigram.Element.Block) {
+                    child.setX(relativeX - child.getWidth() / 2);
+                } else {
+                    child.setX(relativeX);
+                }
+
+                child.setY(relativeY + accumulatedHeight);
+
+                accumulatedHeight += child.getHeight() + SPACE_Y;
+            };
+
+            // 그래픽 업데이트
+            var totalHeight = accumulatedHeight;
+            graphics.height = totalHeight;
+
+            // 상향식 업데이트
+            if (parent != undefined){
+                parent.update();
+            }
+
         }
 
         Line.prototype.highlight = function (on) {
@@ -307,29 +414,12 @@ Omnigram.Element = {};
         Line.prototype.getX = function () { return graphics.x; }
         Line.prototype.getY = function () { return graphics.y; }
 
-        // affectChildren : 하위 요소들에도 영향을 미치는지 여부.
-        Line.prototype.setX = function (x, affectChildren) {
-            if(affectChildren != true){
-                graphics.x = x;
-            } else {
-                var deltaX = graphics.x - x;
-                for (var i = 0; i < children.length; i++) {
-                    children.setX(children.getX() - deltaX, true);
-                }
-                graphics.x -= deltaX;
-            }
+        Line.prototype.setX = function (x) {           
+            graphics.x = x;        
         }
 
-        Line.prototype.setY = function (y, affectChildren) {
-            if (affectChildren != true){
-                graphics.y = y;
-            } else {
-                var deltaY = graphics.y - y;
-                for (var i = 0; i < children.length; i++) {
-                    children.setX(children.getY() - deltaY, true);
-                }
-                graphics.y -= deltaY;
-            }
+        Line.prototype.setY = function (y) {            
+            graphics.y = y;
         }
 
         Line.prototype.getWidth = function () {
@@ -342,9 +432,7 @@ Omnigram.Element = {};
 
         Line.prototype.getParent = function () { return parent; }
         Line.prototype.setParent = function (element) { parent = element; }
-        Line.prototype.getChildren = function () { return children; }
-        Line.prototype.addChild = function (element) { children.push(element); }
-        Line.prototype.addChildAt = function (element, index) { children.splice(index, 0, element); }
+        Line.prototype.getElements = function () { return elements; }
 
         Line.prototype.getGraphics = function () { return graphics; }
 
@@ -359,10 +447,13 @@ Omnigram.Element = {};
 
         var horizontal;
         var graphics;
+        var unique;
+        HelperLine.prototype.getUniqueValue = function() { return unique }
 
         function HelperLine(horizontal_){
 
             horizontal = horizontal_;
+            unique = Math.random() * 1000000;
 
             if (horizontal == true){
                 graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("horizontal-line.png"));
@@ -385,7 +476,7 @@ Omnigram.Element = {};
                 graphics.alpha = 1;
             }
         }
-
+        
         HelperLine.prototype.getX = function () { return graphics.x; }
         HelperLine.prototype.getY = function () { return graphics.y; }
         HelperLine.prototype.setX = function (x) { graphics.x = x; }
@@ -409,6 +500,6 @@ Omnigram.Element = {};
 
         return HelperLine;
 
-    })();
+    }());
 
 })();
