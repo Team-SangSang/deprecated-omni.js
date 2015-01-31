@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>VOMNIGRAM</title>
+        <style>
+        body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+        }
+        </style>
+        <script src="./libs/pixijs/pixi.2.2.5.js"></script>
+        <script src="./omnigram.js"></script>
+    </head>
+    <body>
+        <script>
+        var workspace = new Omnigram.Workspace(800, 600, function() {
+        	workspace.addProcedure();
+        });
+        document.body.appendChild(workspace.getDomElement());
+        </script>
+    </body>
+</html>
