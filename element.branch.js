@@ -4,9 +4,7 @@
  * 
  * orientation: true-right, false-left
  */
-Omnigram.Element.Branch = function(right) {
-    
-    var that = this;
+OMNI.Element.Branch = function(orientation) {
 
     // 부모 객체 (line)
     this.parent;
@@ -15,49 +13,59 @@ Omnigram.Element.Branch = function(right) {
     this.graphics = new PIXI.DisplayObjectContainer();
 
     // 진입 블록
-    this.entry = new Omnigram.Element.Block();
+    this.entry = new OMNI.Element.Block();
 
     // 분기된 라인
-    this.line = new Omnigram.Element.Line();
+    this.ifLine = new OMNI.Element.Line();
+    this.elseLine = new OMNI.Element.Line();
 
     // 보조선
-    this.horizontal_top = new Omnigram.Element.HelperLine(false);
-    this.horizontal_bottom = new Omnigram.Element.HelperLine(false);
+    this.horizontal_top = new OMNI.Element.HelperLine(false);
+    this.horizontal_bottom = new OMNI.Element.HelperLine(false);
     
     // 접힌 방향
-    this.flipped = right;
+    this.orientation_ = orientation;
     
     // 부모 설정
     this.entry.parent = this;
-    this.line.parent = this;
+    this.ifLine.parent = this;
+    this.elseLine.parent = this;
     this.horizontal_top.parent = this;
     this.horizontal_bottom.parent = this;
 
-    this.graphics.addChild(this.horizontal_top.graphics);
-    this.graphics.addChild(this.horizontal_bottom.graphics);
-    this.graphics.addChild(this.line.graphics);
+    var ifContainer = new PIXI.DisplayObjectContainer();
+    var elseContainer = new PIXI.DisplayObjectContainer();
+
+    ifContainer.addChild(this.horizontal_top.graphics);
+    ifContainer.addChild(this.horizontal_bottom.graphics);
+    ifContainer.addChild(this.ifLine.graphics);
+
+    elseContainer.addChild(this.elseLine.graphics);
+
+    this.graphics.addChild(ifContainer);
+    this.graphics.addChild(elseContainer);
+    this.graphics.addChild(this.elseLine.elementsContainer);
+    this.graphics.addChild(this.ifLine.elementsContainer);
     this.graphics.addChild(this.entry.graphics);
 
     // 이벤트 등록
-    function triggerHighlightOn() { that.highlightLine(true) }
-    function triggerHighlightOff() { that.highlightLine(false) }
+    ifContainer.interactive = true;
+    elseContainer.interactive = true;
 
-    this.graphics.interactive = true;
-    this.graphics.mouseover = triggerHighlightOn;
-    this.graphics.mouseout = triggerHighlightOff;
-    /*this.line.graphics.mouseover = triggerHighlightOn;
-    this.horizontal_top.graphics.mouseover = triggerHighlightOn;
-    this.horizontal_bottom.graphics.mouseover = triggerHighlightOn;
+    var that = this;
 
-    this.line.graphics.mouseout = triggerHighlightOff;
-    this.horizontal_top.graphics.mouseout = triggerHighlightOff;
-    this.horizontal_bottom.graphics.mouseout = triggerHighlightOff;
-    */
+    ifContainer.mouseover = function(eventData) { that.highlightIf(true); };
+    ifContainer.mouseout = function(eventData) { that.highlightIf(false); };
+    elseContainer.mouseover = function(eventData) { that.highlightElse(true);};
+    elseContainer.mouseout = function(eventData) { that.highlightElse(false); };
+    this.entry.mouseover = function(eventData) { that.highlightEntry(true); };
+    this.entry.mouseout = function(eventData) { that.highlightEntry(false);};
+
     this.update();
 };
 
 // public 메서드
-Omnigram.Element.Branch.prototype = {
+OMNI.Element.Branch.prototype = {
 
     get width () { return this.graphics.width; },
     set width (value) { this.graphics.width = value },
@@ -71,10 +79,12 @@ Omnigram.Element.Branch.prototype = {
     get y () { return this.graphics.y; },
     set y (value) { this.graphics.y = value },
 
-    get orientation () { return this.flipped; },
-    set orientation (value) { this.flipped = value; this.update(); },
+    get orientation () { return this.orientation_; },
+    set orientation (value) { this.orientation_ = value; this.update(); },
 
-    get procedure () { return this.line; }
+    get ifProcedure () { return this.ifLine; },
+
+    get elseProcedure () { return this.elseLine; }
 
 }
 
@@ -83,36 +93,54 @@ Omnigram.Element.Branch.prototype = {
  * 그래픽, 위치 업데이트
  *
  */
-Omnigram.Element.Branch.prototype.update = function() {
+OMNI.Element.Branch.prototype.update = function() {
 
+    // 엔트리 블록 중앙 정렬
     this.entry.x =  - this.entry.width / 2;
     this.entry.y = 0;
 
-    this.horizontal_top.width = this.entry.width / 2 + this.line.width + Omnigram.Graphics.MIN_LINE_LENGTH;
-    this.horizontal_bottom.width = this.horizontal_top.width;
+    // if와 else 중 더 긴 것으로 세로 길이 통일
+    var maximumLineHeight = Math.max(this.ifLine.height, this.elseLine.height);
+    this.ifLine.height = maximumLineHeight;
+    this.elseLine.height = maximumLineHeight;
+
+    // 가로선 길이 설정
+    var horizontalLineWidth = Math.max(this.entry.width, this.elseLine.elementsWidth) / 2;
+    horizontalLineWidth += Math.max(this.ifLine.elementsWidth / 2, OMNI.Graphics.MIN_LINE_LENGTH) + OMNI.Graphics.SPACE_X;
+
+    this.horizontal_top.width = horizontalLineWidth;
+    this.horizontal_bottom.width = horizontalLineWidth;
+
+    var startX = OMNI.Graphics.LINE_THICKNESS / 2;
 
     // 오른쪽
-    if (this.flipped) {
-        
-        this.horizontal_top.x = Omnigram.Graphics.LINE_THICKNESS / 2;
+    if (this.orientation == true) {
+
+        this.horizontal_top.x = startX;
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
 
-        this.horizontal_bottom.x = Omnigram.Graphics.LINE_THICKNESS / 2;
-        this.horizontal_bottom.y = this.horizontal_top.y + this.line.height + Omnigram.Graphics.LINE_THICKNESS;
+        this.horizontal_bottom.x = this.horizontal_top.x;
+        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
 
-        this.line.x = this.horizontal_top.width - Omnigram.Graphics.LINE_THICKNESS / 2;
-        this.line.y = this.horizontal_top.y + Omnigram.Graphics.LINE_THICKNESS;
+        this.ifLine.x = - startX + this.horizontal_top.width;
+        this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
+
+        this.elseLine.x = - startX;
+        this.elseLine.y = this.ifLine.y + OMNI.Graphics.LINE_THICKNESS;
 
     } else {
 
-        this.horizontal_top.x = - this.horizontal_top.width - (Omnigram.Graphics.LINE_THICKNESS / 2);
+        this.horizontal_top.x = - startX - this.horizontal_top.width;
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
         
-        this.horizontal_bottom.x = - this.horizontal_bottom.width - (Omnigram.Graphics.LINE_THICKNESS / 2);
-        this.horizontal_bottom.y = this.horizontal_top.y + this.line.height + Omnigram.Graphics.LINE_THICKNESS;
+        this.horizontal_bottom.x = this.horizontal_top.x;
+        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
 
-        this.line.x = - this.horizontal_top.width - Omnigram.Graphics.LINE_THICKNESS / 2;
-        this.line.y = this.horizontal_top.y + Omnigram.Graphics.LINE_THICKNESS;
+        this.ifLine.x = - startX - this.horizontal_top.width;
+        this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
+
+        this.elseLine.x = - startX;
+        this.elseLine.y = this.ifLine.y + OMNI.Graphics.LINE_THICKNESS;
     }
 
     // 부모 객체 업데이트 (상향 이벤트)
@@ -126,23 +154,43 @@ Omnigram.Element.Branch.prototype.update = function() {
  * 진입점에 하이라이트 효과를 준다.
  *
  */
-Omnigram.Element.Branch.prototype.highlightEntry = function(on) {
-    this.highlightLine(on);
+OMNI.Element.Branch.prototype.highlightEntry = function(on) {
+    if (on) {
+        this.entry.highlight(true);
+    } else {
+        this.entry.highlight(false);
+    }
+}      
+  
+
+/**
+ *
+ *if라인에 하이라이트 효과를 준다.
+ *
+ */
+OMNI.Element.Branch.prototype.highlightIf = function(on) {
+    if (on) {
+        this.ifLine.highlight(true);
+        this.horizontal_top.highlight(true);
+        this.horizontal_bottom.highlight(true);
+    } else {
+        this.ifLine.highlight(false);
+        this.horizontal_top.highlight(false);
+        this.horizontal_bottom.highlight(false);
+    }
 }
 
 /**
  *
- * 라인에 하이라이트 효과를 준다.
+ * else라인에 하이라이트 효과를 준다.
  *
  */
-Omnigram.Element.Branch.prototype.highlightLine = function(on) {
-    if (on) {
-        this.line.highlight(true);
-        this.horizontal_top.highlight(true);
-        this.horizontal_bottom.highlight(true);
+OMNI.Element.Branch.prototype.highlightElse = function(on) {
+          
+    if (on) { 
+        this.elseLine.highlight(true);
     } else {
-        this.line.highlight(false);
-        this.horizontal_top.highlight(false);
-        this.horizontal_bottom.highlight(false);
+        this.elseLine.highlight(false);
     }
+      
 }

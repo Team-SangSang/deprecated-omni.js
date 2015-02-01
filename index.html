@@ -3,38 +3,36 @@
     <head>
         <title>VOMNIGRAM</title>
         <style>
-        body {
-        margin: 0;
-        padding: 0;
-        background-color: #ffffff;
-        }
+                body {
+                margin: 0;
+                padding: 0;
+                background-color: #ffffff;
+                }
         </style>
         <script src="./libs/pixijs/pixi.2.2.5.js"></script>
         <script src="./workspace.js"></script>
         <script src="./element.line.js"></script>
         <script src="./element.branch.js"></script>
-        <script src="./element.loop.js"></script>
         <script src="./element.block.js"></script>
         <script src="./element.helperline.js"></script>
     </head>
     <body>
         <script>
-
-        var workspace = new Omnigram.Workspace(800, 600, function() {
-        	var procedure1 = workspace.addProcedure();
-        	workspace.addBlock(procedure1);
-        	workspace.addBlock(procedure1);
-        	var branch1 = workspace.addBranch(procedure1, true);
-        	workspace.addBlock(branch1.procedure);
-        	workspace.addBlock(branch1.procedure);
-        	var branch2 = workspace.addBranch(branch1.procedure, true);
-        	workspace.addBlock(branch2.procedure);
-        	workspace.addBlock(branch1.procedure);
-        	workspace.addBlock(procedure1);
-        	var branch3 = workspace.addBranch(procedure1, false);
-        	workspace.addBlock(branch3.procedure);
-        });
-        document.body.appendChild(workspace.getDomElement());
+                var workspace = new OMNI.Workspace(800, 600);
+                var procedure1 = workspace.addProcedure();
+                workspace.addBlock(procedure1);
+                workspace.addBlock(procedure1);
+                var branch1 = workspace.addBranch(procedure1, true);
+                workspace.addBlock(branch1.ifProcedure);
+                workspace.addBlock(branch1.ifProcedure);
+                workspace.addBlock(branch1.elseProcedure);
+                var branch2 = workspace.addBranch(branch1.ifProcedure, true);
+                workspace.addBlock(branch2.ifProcedure);
+                workspace.addBlock(branch1.ifProcedure);
+                workspace.addBlock(procedure1);
+                var branch3 = workspace.addBranch(procedure1, false);
+                workspace.addBlock(branch3.ifProcedure);
+                document.body.appendChild(workspace.getDomElement());
         </script>
     </body>
 </html>

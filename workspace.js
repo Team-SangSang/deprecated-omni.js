@@ -1,16 +1,28 @@
-var Omnigram = {};
-Omnigram.Element = {};
+var OMNI = {};
+OMNI.Element = {};
 
 // 그래픽스 관련 설정
-Omnigram.Graphics = {
+OMNI.Graphics = {
+
     PADDING_X: 30,
     PADDING_Y: 30,
+
     HITAREA_PADDING_X: 15,
     HITAREA_PADDING_Y: 15,
-    SPACE_X: 40,
+
+    SPACE_X: 15,
     SPACE_Y: 15,
+
     LINE_THICKNESS: 10,
-    MIN_LINE_LENGTH: 20
+
+    MIN_LINE_LENGTH: 20,
+
+    HIGHLIGHT_MATRIX: [
+        1, 0, 0, 0.5,
+        0, 1, 0, 0.5,
+        0, 0, 1, 0.5,
+        0, 0, 0, 1
+    ]
 }
 
 /**
@@ -18,12 +30,10 @@ Omnigram.Graphics = {
  * 모든 작업이 시작되는 곳
  *
  */
-Omnigram.Workspace = function (width, height, onLoad) {
+OMNI.Workspace = function(width, height) {
 
     "use strict";
-
-    var that = this;
-
+    
     // 모든 요소들이 올려질 스테이지
     this.stage = new PIXI.Stage(0xDDDDDD);
 
@@ -31,19 +41,20 @@ Omnigram.Workspace = function (width, height, onLoad) {
     this.renderer = new PIXI.autoDetectRenderer(width, height);
 
     // 레이어
-    var NUMBER_OF_LAYERS = 3;
     this.layer = [];
 
     // 최상위 작업 유닛인 프로시저
     this.procedures = [];
 
-    for (var i = 0; i < NUMBER_OF_LAYERS; i++) {
+    for (var i = 0; i < 3; i++) {
         this.layer[i] = new PIXI.DisplayObjectContainer();
         this.stage.addChild(this.layer[i]);
     };
 
-    loadGraphicsResources(onLoad);
+    OMNI.Graphics.highlightFilter = new PIXI.ColorMatrixFilter();
+    OMNI.Graphics.highlightFilter.matrix = OMNI.Graphics.HIGHLIGHT_MATRIX;
 
+    //loadGraphicsResources(onLoad);
     /**
      *
      * 그래픽 요소를 로드한다.
@@ -54,145 +65,136 @@ Omnigram.Workspace = function (width, height, onLoad) {
         loader.onComplete = onLoad;
         loader.load();
     }
-
-    function procedureMouseOver(procedure) {
-        procedure.graphics.alpha = 0.5;
-    }
-
-    function procedureMouseOut(procedure) {
-        procedure.graphics.alpha = 1;
-    }
-
-    /**
-     *
-     * 특정 프로시저에 블록을 추가한다.
-     *
-     */
-    this.addBlock = function(procedure) {
-        var block = new Omnigram.Element.Block();
-        this.layer[0].addChild(block.graphics);
-        procedure.addElement(block);
-
-        return block;
-    }
-
-    /**
-     *
-     * 특정 프로시저에 가지를 추가한다.
-     *
-     */
-    this.addBranch = function(procedure, flipped) {
-        var branch = new Omnigram.Element.Branch(flipped);
-        this.layer[0].addChild(branch.graphics);
-        procedure.addElement(branch);
-
-        return branch;
-    }
-
-    /**
-     *
-     * 새 프로시저를 스테이지에 추가한다.
-     *
-     */
-    this.addProcedure = function() {
-
-        // 프로시저의 기반은 라인이다.
-        var line = new Omnigram.Element.Line();
-
-        // 등록
-        this.procedures.push(line);
-        this.layer[0].addChild(line.graphics);
-        this.update();
-
-        // 프로시저 마우스 이벤트
-        line.graphics.mouseover = function() {
-            procedureMouseOver(line);
-        }
-        line.graphics.mouseout = function() {
-            procedureMouseOut(line);
-        }
-
-        return line;  
-    }
-
-    /**
-     *
-     * 프로시저를 스테이지에서 삭제한다.
-     *
-     */
-    this.removeProcedure = function(procedure) {
-
-        var index = this.procedures.indexOf(procedure);
-
-        if (index != -1) {
-
-            this.procedures.splice(index, 1);
-            this.layer[0].removeChild(procedure);
-
-            this.update();
-        }
-    }
-
-    /**
-     *
-     * 스테이지 위의 모든 구성 요소의 위치를 업데이트한다.
-     *
-     */
-    this.update = function() {
-
-        // 프로시저 가로 정렬
-        var accumulatedWidth = Omnigram.Graphics.PADDING_X;
-
-        for (var i = 0; i < this.procedures.length; i++) {
-
-            var procedure = this.procedures[i];
-
-            procedure.x = accumulatedWidth;
-            procedure.y = Omnigram.Graphics.PADDING_Y;
-
-            procedure.update();
-
-            accumulatedWidth += procedure.width + Omnigram.Graphics.SPACE_X;
-        }
-
-        // 여백이 남으면 레이어를 중앙에 정렬
-        var totalWidth = accumulatedWidth - Omnigram.Graphics.SPACE_X + Omnigram.Graphics.PADDING_X;
-        if (totalWidth < this.renderer.width) {
-            this.layer[0].x = (this.renderer.width - totalWidth) / 2;
-        }
-    }
-
-    /**
-     *
-     * 스테이지의 크기를 변경한다.
-     *
-     */
-    this.resize = function(width, height) {
-
-        this.renderer.resize(width, height);
-
-        this.update();
-    }
-
     /**
      *
      * 실시간 랜더링
      *
      */
-
+    var that = this;
     function animate() {
         that.renderer.render(that.stage);
-
         requestAnimFrame(animate);
     }
-
     requestAnimFrame(animate);
 };
+
+/**
+ *
+ * 스테이지 위의 모든 구성 요소의 위치를 업데이트한다.
+ *
+ */
+OMNI.Workspace.prototype.update = function() {
+
+    // 프로시저 가로 정렬
+    var accumulatedWidth = OMNI.Graphics.PADDING_X;
+
+    for (var i = 0; i < this.procedures.length; i++) {
+
+        var procedure = this.procedures[i];
+
+        procedure.x = accumulatedWidth;
+        procedure.y = OMNI.Graphics.PADDING_Y;
+
+        procedure.update();
+
+        accumulatedWidth += procedure.width + OMNI.Graphics.SPACE_X;
+    }
+
+    // 여백이 남으면 레이어를 중앙에 정렬
+    var totalWidth = accumulatedWidth - OMNI.Graphics.SPACE_X + OMNI.Graphics.PADDING_X;
+
+    if (totalWidth < this.renderer.width) {
+        this.layer[0].x = (this.renderer.width - totalWidth) / 2;
+    }
+}
+
+/**
+ *
+ * 특정 프로시저에 블록을 추가한다.
+ *
+ */
+OMNI.Workspace.prototype.addBlock = function(procedure) {
+    var block = new OMNI.Element.Block();
+    procedure.addElement(block);
+
+    return block;
+}
+
+/**
+ *
+ * 특정 프로시저에 가지를 추가한다.
+ *
+ */
+OMNI.Workspace.prototype.addBranch = function(procedure, flipped) {
+    var branch = new OMNI.Element.Branch(flipped);
+    procedure.addElement(branch);
+
+    return branch;
+}
+
+/**
+ *
+ * 새 프로시저를 스테이지에 추가한다.
+ *
+ */
+OMNI.Workspace.prototype.addProcedure = function() {
+
+    // 프로시저의 기반은 라인이다.
+    var procedure = new OMNI.Element.Line();
+
+    // 등록
+    this.procedures.push(procedure);
+    this.layer[0].addChild(procedure.graphics);
+    this.layer[0].addChild(procedure.elementsContainer);
+
+    this.update();
+
+    // 프로시저 마우스 이벤트
+    procedure.graphics.mouseover = function() {
+        procedure.highlight(true);
+    }
+
+    procedure.graphics.mouseout = function() {
+        procedure.highlight(false);
+    }
+
+    return procedure;
+}
+
+/**
+ *
+ * 프로시저를 스테이지에서 삭제한다.
+ *
+ */
+OMNI.Workspace.prototype.removeProcedure = function(procedure) {
+
+    var index = this.procedures.indexOf(procedure);
+
+    if (index != -1) {
+        this.procedures.splice(index, 1);
+        this.layer[0].removeChild(procedure.graphics);
+        this.layer[0].removeChild(procedure.elementsContainer);
+
+        this.update();
+    }
+}
+
+/**
+ *
+ * 스테이지의 크기를 변경한다.
+ *
+ */
+OMNI.Workspace.prototype.resize = function(width, height) {
+    this.renderer.resize(width, height);
+
+    this.update();
+}
+
 /**
  *
  * DOM 객체
  *
  */
-Omnigram.Workspace.prototype.getDomElement = function() {
+OMNI.Workspace.prototype.getDomElement = function() {
     return this.renderer.view;
 }

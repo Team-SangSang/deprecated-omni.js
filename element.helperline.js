@@ -4,41 +4,39 @@
  * 
  * orientation: true-vertical, false-horizontal
  */
-Omnigram.Element.HelperLine = function(vertical) {
+OMNI.Element.HelperLine = function(orientation) {
 
     // 부모 객체
     this.parent;
 
     // 방향
-    this.orientation = vertical;
+    this.orientation = orientation;
     
     // 그래픽
-    this.graphics = new PIXI.DisplayObjectContainer();
-    this.line;
+    this.graphics = new PIXI.Graphics();
+    this.graphics.beginFill(0);
+    this.graphics.drawRect(0, 0, 10, 10);
 
-    if (vertical) {
-        this.line = new PIXI.Sprite(PIXI.Texture.fromFrame("vertical-line.png"));
-        this.line.width = Omnigram.Graphics.LINE_THICKNESS;
-        this.line.height = Omnigram.Graphics.MIN_LINE_LENGTH * 2;
+    if (orientation) {
+        this.graphics.width = OMNI.Graphics.LINE_THICKNESS;
+        this.graphics.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
     } else {
-        this.line = new PIXI.Sprite(PIXI.Texture.fromFrame("horizontal-line.png"));
-        this.line.width = Omnigram.Graphics.MIN_LINE_LENGTH * 2;
-        this.line.height = Omnigram.Graphics.LINE_THICKNESS;
+        this.graphics.width = OMNI.Graphics.MIN_LINE_LENGTH * 2;
+        this.graphics.height = OMNI.Graphics.LINE_THICKNESS;
     }
-
-    this.graphics.addChild(this.line);
     this.graphics.interactive = true;
 
+    this.update();
 };
 
 // public 메서드
-Omnigram.Element.HelperLine.prototype = {
+OMNI.Element.HelperLine.prototype = {
 
-    get width () { return this.line.width; },
-    set width (value) { this.line.width = value },
+    get width () { return this.graphics.width; },
+    set width (value) { this.graphics.width = value },
 
-    get height () { return this.line.height; },
-    set height (value) { this.line.height = value },
+    get height () { return this.graphics.height; },
+    set height (value) { this.graphics.height = value },
 
     get x () { return this.graphics.x; },
     set x (value) { this.graphics.x = value },
@@ -53,7 +51,7 @@ Omnigram.Element.HelperLine.prototype = {
  * 그래픽, 위치 업데이트
  *
  */
-Omnigram.Element.HelperLine.prototype.update =  function() {
+OMNI.Element.HelperLine.prototype.update =  function() {
     // TODO
 }
 
@@ -62,10 +60,10 @@ Omnigram.Element.HelperLine.prototype.update =  function() {
  * 라인에 하이라이트 효과를 준다.
  *
  */
-Omnigram.Element.HelperLine.prototype.highlight = function(on) {
+OMNI.Element.HelperLine.prototype.highlight = function(on) {
     if (on == true) {
-        this.graphics.alpha = 0.5;
+        this.graphics.filters = [OMNI.Graphics.highlightFilter];
     } else {
-        this.graphics.alpha = 1;
+        this.graphics.filters = null;
     }
 }

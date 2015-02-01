@@ -3,43 +3,52 @@
  * 동작하는 세로선
  *
  */
-Omnigram.Element.Line = function() {
+OMNI.Element.Line = function() {
 
     // 부모 객체(element 거나 없음)
     this.parent;
 
     // 그래픽
-    this.graphics = new PIXI.DisplayObjectContainer();
-    this.line = new PIXI.Sprite(PIXI.Texture.fromFrame("vertical-line.png"));
+    this.graphics = new PIXI.Graphics();
+    this.graphics.beginFill(0);
+    this.graphics.drawRect(0, 0, 10, 10);
 
-    // 품고 있는 코드 요소들
+    // 구성 요소
     this.elements = [];
+    this.elementsContainer = new PIXI.DisplayObjectContainer();
 
-    this.line.width = Omnigram.Graphics.LINE_THICKNESS;
-    this.line.height = Omnigram.Graphics.MIN_LINE_LENGTH * 2;
+    this.maximimElementWidth = 0;
 
+    this.graphics.width = OMNI.Graphics.LINE_THICKNESS;
+    this.graphics.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
     this.graphics.interactive = true;
-    this.graphics.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
 
-    this.graphics.addChild(this.line);
     this.update();
 };
 
 // public 메서드
-Omnigram.Element.Line.prototype = {
+OMNI.Element.Line.prototype = {
 
-    get width () { return this.line.width; },
-    set width (value) { this.line.width = value },
+    get width () { return this.graphics.width; },
+    set width (value) { this.graphics.width = value; },
 
-    get height () { return this.line.height; },
-    set height (value) { this.line.height = value },
+    get height () { return this.graphics.height; },
+    set height (value) { this.graphics.height = value; },
 
     get x () { return this.graphics.x; },
-    set x (value) { this.graphics.x = value },
+    set x (value) {
+        this.graphics.x = value;
+        this.elementsContainer.x = value;
+    },
 
     get y () { return this.graphics.y; },
-    set y (value) { this.graphics.y = value }
+    set y (value) {
+        this.graphics.y = value;
+        this.elementsContainer.y = value;
+    },
 
+    get elementsWidth () { return this.maximimElementWidth; },
+    get elementsHeight () { return this.graphics.height; }
 }
 
 /**
@@ -47,47 +56,50 @@ Omnigram.Element.Line.prototype = {
  * 그래픽, 위치 업데이트
  *
  */
-Omnigram.Element.Line.prototype.update = function() {
+OMNI.Element.Line.prototype.update = function() {
 
     // 구성 요소 세로 정렬
+    var relativeX = OMNI.Graphics.LINE_THICKNESS / 2;
+    var relativeY = 0;
 
-    var relativeX;
-    var relativeY;
-
-    if(this.parent != undefined) {
-        relativeX = this.parent.graphics.x  + this.graphics.x + Omnigram.Graphics.LINE_THICKNESS / 2;
-        relativeY = this.parent.graphics.y + this.graphics.y;
-    } else {
-        relativeX = this.graphics.x + Omnigram.Graphics.LINE_THICKNESS / 2;
-        relativeY = this.graphics.y;
-    }
-
-    var accumulatedHeight = Omnigram.Graphics.SPACE_Y;
+    var accumulatedHeight = OMNI.Graphics.SPACE_Y;
+    this.maximimElementWidth = 0;
 
     for (var i = 0; i < this.elements.length; i++) {
 
         var element = this.elements[i];
 
         // 블록은 중앙 정렬, 구조체는 원점 정렬
-        if (element instanceof Omnigram.Element.Block) {
+        if (element instanceof OMNI.Element.Block) {            
             element.x = relativeX - element.width / 2;
+
+            if(element.width > this.maximimElementWidth) {
+                this.maximimElementWidth = element.width;
+            }
+
         } else {
             element.x = relativeX;
+
+            if(element.entry.width > this.maximimElementWidth) {
+                this.maximimElementWidth = element.entry.width;
+            }
         }
+
         element.y = relativeY + accumulatedHeight;
 
-        accumulatedHeight += element.height + Omnigram.Graphics.SPACE_Y;
+        accumulatedHeight += element.height + OMNI.Graphics.SPACE_Y;
     };
 
     // 그래픽 업데이트
-    var totalHeight = accumulatedHeight;
-    this.line.height = Math.max(Omnigram.Graphics.MIN_LINE_LENGTH * 2, totalHeight);
+    this.graphics.height = Math.max(OMNI.Graphics.MIN_LINE_LENGTH, accumulatedHeight);
 
     // hitArea 업데이트
-    this.graphics.hitArea.x = - Omnigram.Graphics.HITAREA_PADDING_X;
-    this.graphics.hitArea.y = - Omnigram.Graphics.HITAREA_PADDING_Y;
-    this.graphics.hitArea.height = totalHeight + Omnigram.Graphics.HITAREA_PADDING_Y * 2;
-    this.graphics.hitArea.width = Omnigram.Graphics.LINE_THICKNESS + Omnigram.Graphics.HITAREA_PADDING_X * 2;
+    /*
+    this.graphics.hitArea.x = - OMNI.Graphics.HITAREA_PADDING_X;
+    this.graphics.hitArea.y = - OMNI.Graphics.HITAREA_PADDING_Y;
+    this.graphics.hitArea.height = totalHeight + OMNI.Graphics.HITAREA_PADDING_Y * 2;
+    this.graphics.hitArea.width = OMNI.Graphics.LINE_THICKNESS + OMNI.Graphics.HITAREA_PADDING_X * 2;
+    */
 
     // 부모 객체 업데이트 (상향 이벤트)
     if (this.parent != undefined) {
@@ -100,23 +112,12 @@ Omnigram.Element.Line.prototype.update = function() {
  * 라인에 새 코드 요소를 추가한다.
  *
  */
-Omnigram.Element.Line.prototype.addElement = function(element) {
+OMNI.Element.Line.prototype.addElement = function(element) {
 
+    element.parent = this;
+
+    this.elementsContainer.addChild(element.graphics);
     this.elements.push(element);
-    element.parent = this;
-
-    this.update();
-}
-
-/**
- *
- * 라인의 특정 위치에 새 코드 요소를 추가한다.
- *
- */
-Omnigram.Element.Line.prototype.addElementAt = function(element, index) {
-
-    this.elements.splice(index, 0, element);
-    element.parent = this;
 
     this.update();
 }
@@ -126,10 +127,10 @@ Omnigram.Element.Line.prototype.addElementAt = function(element, index) {
  * 라인에 하이라이트 효과를 준다.
  *
  */
-Omnigram.Element.Line.prototype.highlight = function(on) {
+OMNI.Element.Line.prototype.highlight = function(on) {
     if (on == true) {
-        this.graphics.alpha = 0.5;
+        this.graphics.filters = [OMNI.Graphics.highlightFilter];
     } else {
-       this.graphics.alpha = 1;
+        this.graphics.filters = null;
     }
 }
