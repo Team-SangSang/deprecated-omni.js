@@ -17,7 +17,8 @@ OMNI.Element.Line = function() {
     this.elements = [];
     this.elementsContainer = new PIXI.DisplayObjectContainer();
 
-    this.maximimElementWidth = 0;
+    this.maximimElementWidthOfRight = 0;
+    this.maximimElementWidthOfLeft = 0;
 
     this.graphics.width = OMNI.Graphics.LINE_THICKNESS;
     this.graphics.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
@@ -47,8 +48,8 @@ OMNI.Element.Line.prototype = {
         this.elementsContainer.y = value;
     },
 
-    get elementsWidth () { return this.maximimElementWidth; },
-    get elementsHeight () { return this.graphics.height; }
+    get elementsWidthOfRight () { return this.maximimElementWidthOfRight; },
+    get elementsWidthOfLeft () { return this.maximimElementWidthOfLeft; }
 }
 
 /**
@@ -63,7 +64,8 @@ OMNI.Element.Line.prototype.update = function() {
     var relativeY = 0;
 
     var accumulatedHeight = OMNI.Graphics.SPACE_Y;
-    this.maximimElementWidth = 0;
+    this.maximimElementWidthOfRight = 0;
+    this.maximimElementWidthOfLeft = 0;
 
     for (var i = 0; i < this.elements.length; i++) {
 
@@ -73,16 +75,16 @@ OMNI.Element.Line.prototype.update = function() {
         if (element instanceof OMNI.Element.Block) {            
             element.x = relativeX - element.width / 2;
 
-            if(element.width > this.maximimElementWidth) {
-                this.maximimElementWidth = element.width;
-            }
+            var halfWidth = element.width / 2;
+
+            if(halfWidth > this.maximimElementWidthOfRight) { this.maximimElementWidthOfRight = halfWidth; }
+            if(halfWidth > this.maximimElementWidthOfLeft) { this.maximimElementWidthOfLeft = halfWidth; }            
 
         } else {
             element.x = relativeX;
 
-            if(element.entry.width > this.maximimElementWidth) {
-                this.maximimElementWidth = element.entry.width;
-            }
+            if(element.widthOfRight > this.maximimElementWidthOfRight) { this.maximimElementWidthOfRight = element.widthOfRight; }
+            if(element.widthOfLeft > this.maximimElementWidthOfLeft) { this.maximimElementWidthOfLeft = element.widthOfLeft; }
         }
 
         element.y = relativeY + accumulatedHeight;

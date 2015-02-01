@@ -73,6 +73,21 @@ OMNI.Element.Branch.prototype = {
     get height () { return this.graphics.height; },
     set height (value) { this.graphics.height = value },
 
+    get widthOfLeft () { 
+        if (this.orientation) {
+            return Math.max(this.elseLine.elementsWidthOfLeft, this.entry.width / 2);
+        } else {
+            return this.horizontal_top.width + this.ifLine.elementsWidthOfLeft + OMNI.Graphics.LINE_THICKNESS;
+        }
+    },
+    get widthOfRight () { 
+        if (this.orientation) {
+            return this.horizontal_top.width + this.ifLine.elementsWidthOfRight  + OMNI.Graphics.LINE_THICKNESS;
+        } else {
+            return Math.max(this.elseLine.elementsWidthOfRight, this.entry.width / 2);
+        }
+    },
+
     get x () { return this.graphics.x; },
     set x (value) { this.graphics.x = value },
 
@@ -105,9 +120,14 @@ OMNI.Element.Branch.prototype.update = function() {
     this.elseLine.height = maximumLineHeight;
 
     // 가로선 길이 설정
-    var horizontalLineWidth = Math.max(this.entry.width, this.elseLine.elementsWidth) / 2;
-    horizontalLineWidth += Math.max(this.ifLine.elementsWidth / 2, OMNI.Graphics.MIN_LINE_LENGTH) + OMNI.Graphics.SPACE_X;
-
+    var horizontalLineWidth;
+    if (this.orientation == true) {
+        horizontalLineWidth = Math.max(this.entry.width / 2, this.elseLine.elementsWidthOfRight);        
+        horizontalLineWidth += Math.max(this.ifLine.elementsWidthOfLeft, OMNI.Graphics.MIN_LINE_LENGTH) + OMNI.Graphics.SPACE_X;
+    } else {
+        horizontalLineWidth = Math.max(this.entry.width / 2, this.elseLine.elementsWidthOfLeft);
+        horizontalLineWidth += Math.max(this.ifLine.elementsWidthOfRight, OMNI.Graphics.MIN_LINE_LENGTH) + OMNI.Graphics.SPACE_X;
+    }
     this.horizontal_top.width = horizontalLineWidth;
     this.horizontal_bottom.width = horizontalLineWidth;
 
