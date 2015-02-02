@@ -13,7 +13,8 @@ OMNI.Graphics = {
     SPACE_X: 15,
     SPACE_Y: 15,
 
-    LINE_THICKNESS: 10,
+    LINE_THICKNESS: 5,
+    LINE_THICKNESS_ADDER: 1.5,
 
     MIN_LINE_LENGTH: 20,
 

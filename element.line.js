@@ -15,6 +15,7 @@ OMNI.Element.Line = function() {
     this.lineGraphic.drawRect(0, 0, 10, 10);
 
     this.graphics.addChild(this.lineGraphic);
+    this.graphics.interactive = true;
 
     // 구성 요소
     this.elements = [];
@@ -23,14 +24,17 @@ OMNI.Element.Line = function() {
     this.maximumElementWidthOfRight = 0;
     this.maximumElementWidthOfLeft = 0;
     this.maximumElementHeight = 0;
-
-    this.lineGraphic.width = OMNI.Graphics.LINE_THICKNESS;
-    this.lineGraphic.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
-    this.graphics.interactive = true;
+    
 
     // 트윈
     this.tween = new TWEEN.Tween(this.lineGraphic);
     this.elementsTween = new TWEEN.Tween(this.elementsContainer);
+
+    // 선 굵기
+    this.thickness = OMNI.Graphics.LINE_THICKNESS;
+
+    this.lineGraphic.width = this.thickness;
+    this.lineGraphic.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
 
     this.targetX = 0;
     this.targetY = 0;
@@ -42,6 +46,14 @@ OMNI.Element.Line = function() {
 
 // public 메서드
 OMNI.Element.Line.prototype = {
+
+    get thickness () { return this._thickness; },
+    set thickness (value) {
+        this._thickness = value;        
+        this.targetWidth = value;      
+
+        this.updateTween();
+    },
 
     get width () { return this.targetWidth; },
     set width (value) {
@@ -84,8 +96,23 @@ OMNI.Element.Line.prototype.update = function() {
 
     var that = this;
 
+    var maximumThickness = OMNI.Graphics.LINE_THICKNESS;
+
+    // 가장 굵은 하위 요소를 찾는다.
+    for (var i = 0; i < this.elements.length; i++) {
+        var element = this.elements[i];
+        if (element instanceof OMNI.Element.Branch) {
+            if (element.thickness > maximumThickness){
+                maximumThickness = element.thickness;
+            }
+        }
+    }
+
+    // 굵기 설정
+    this.thickness = maximumThickness + OMNI.Graphics.LINE_THICKNESS_ADDER;
+
     // 구성 요소 세로 정렬
-    var relativeX = OMNI.Graphics.LINE_THICKNESS / 2;
+    var relativeX = this.thickness / 2;
     var relativeY = 0;
 
     var accumulatedHeight = OMNI.Graphics.SPACE_Y;

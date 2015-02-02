@@ -72,10 +72,12 @@ OMNI.Element.Branch = function(orientation) {
 
     // 트윈
     this.tween = new TWEEN.Tween(this.graphics);
+
+     // 선 굵기
+    this.thickness = OMNI.Graphics.LINE_THICKNESS;
+
     this.targetX = 0;
     this.targetY = 0;
-    this.targetWidth = 0;
-    this.targetHeight = 0;
 
     this.update();
 };
@@ -83,8 +85,18 @@ OMNI.Element.Branch = function(orientation) {
 // public 메서드
 OMNI.Element.Branch.prototype = {
 
-    get width () { return this.widthOfLeft + this.widthOfRight; },
+    get thickness () { return this._thickness; },
+    set thickness (value) {
+        this._thickness = value;
+        this.ifLine.thickness = value;
+        this.elseLine.thickness = value;
+        this.horizontal_top.thickness = value;
+        this.horizontal_bottom.thickness = value;
+        // CAUTION!
+        //this.update();
+    },
 
+    get width () { return this.widthOfLeft + this.widthOfRight; },
     get height () { return this.targetHeight; },
 
     get widthOfLeft () { 
@@ -132,6 +144,14 @@ OMNI.Element.Branch.prototype.update = function() {
 
     var that = this;
 
+    // 선 굵기 설정
+    var maximumThickness = Math.max(this.ifLine.thickness, this.elseLine.thickness);
+    this.ifLine.thickness = maximumThickness;
+    this.elseLine.thickness = maximumThickness;
+    this.horizontal_top.thickness = maximumThickness;
+    this.horizontal_bottom.thickness = maximumThickness; 
+    this._thickness = maximumThickness;
+
     // 엔트리 블록 중앙 정렬
     this.entry.x =  - this.entry.width / 2;
     this.entry.y = 0;
@@ -155,7 +175,7 @@ OMNI.Element.Branch.prototype.update = function() {
     this.horizontal_top.width = horizontalLineWidth;
     this.horizontal_bottom.width = horizontalLineWidth;
 
-    var startX = OMNI.Graphics.LINE_THICKNESS / 2;
+    var startX = this.thickness / 2;
 
     // 오른쪽
     if (this.orientation == true) {
@@ -164,13 +184,13 @@ OMNI.Element.Branch.prototype.update = function() {
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
 
         this.horizontal_bottom.x = this.horizontal_top.x;
-        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
+        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + this.thickness;
 
         this.ifLine.x = - startX + horizontalLineWidth;
-        this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
+        this.ifLine.y = this.horizontal_top.y + this.thickness;
 
         this.elseLine.x = - startX;
-        this.elseLine.y = this.ifLine.y + OMNI.Graphics.LINE_THICKNESS;
+        this.elseLine.y = this.ifLine.y + this.thickness;
 
     } else {
 
@@ -178,16 +198,16 @@ OMNI.Element.Branch.prototype.update = function() {
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
         
         this.horizontal_bottom.x = this.horizontal_top.x;
-        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
+        this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + this.thickness;
 
         this.ifLine.x = - startX - horizontalLineWidth;
-        this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
+        this.ifLine.y = this.horizontal_top.y + this.thickness;
 
         this.elseLine.x = - startX;
-        this.elseLine.y = this.ifLine.y + OMNI.Graphics.LINE_THICKNESS;
+        this.elseLine.y = this.ifLine.y + this.thickness;
     }
 
-    this.targetHeight = maximumLineHeight + this.entry.height / 2 + OMNI.Graphics.LINE_THICKNESS + OMNI.Graphics.SPACE_Y;
+    this.targetHeight = maximumLineHeight + this.entry.height / 2 + this.thickness + OMNI.Graphics.SPACE_Y;
 
     // 부모 객체 업데이트 (상향 이벤트)
     if (this.parent != undefined) {

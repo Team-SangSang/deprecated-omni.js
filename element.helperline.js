@@ -18,16 +18,19 @@ OMNI.Element.HelperLine = function(orientation) {
     this.graphics.drawRect(0, 0, 10, 10);
 
     if (orientation) {
-        this.graphics.width = OMNI.Graphics.LINE_THICKNESS;
+        this.graphics.width = this.thickness;
         this.graphics.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
     } else {
         this.graphics.width = OMNI.Graphics.MIN_LINE_LENGTH * 2;
-        this.graphics.height = OMNI.Graphics.LINE_THICKNESS;
+        this.graphics.height = this.thickness;
     }
     this.graphics.interactive = true;
 
     // 트윈
     this.tween = new TWEEN.Tween(this.graphics);
+
+    // 선 굵기
+    this.thickness = OMNI.Graphics.LINE_THICKNESS;
 
     this.targetX = 0;
     this.targetY = 0;
@@ -39,6 +42,19 @@ OMNI.Element.HelperLine = function(orientation) {
 
 // public 메서드
 OMNI.Element.HelperLine.prototype = {
+
+    get thickness () { return this._thickness; },
+    set thickness (value) {
+        this._thickness = value;
+
+        if (this.orientation) {
+            this.targetWidth = value;
+        } else {
+            this.targetHeight = value;
+        }
+
+        this.updateTween();
+    },
 
     get width () { return this.targetWidth; },
     set width (value) {
