@@ -20,6 +20,14 @@ OMNI.Element.Block = function() {
 
     this.graphics.interactive = true;
 
+    // 트윈
+    this.tween = new TWEEN.Tween(this.graphics);
+
+    this.targetX = 0;
+    this.targetY = 0;
+    this.targetWidth = this.graphics.width;
+    this.targetHeight = this.graphics.height;
+
 };
 
 // public 메서드
@@ -31,11 +39,17 @@ OMNI.Element.Block.prototype = {
     get height () { return this.graphics.height; },
     set height (value) { this.graphics.height = value },
 
-    get x () { return this.graphics.x; },
-    set x (value) { this.graphics.x = value },
+    get x () { return this.targetX; },
+    set x (value) {
+        this.targetX = value;
+        this.updateTween();
+    },
 
-    get y () { return this.graphics.y; },
-    set y (value) { this.graphics.y = value }
+    get y () { return this.targetY; },
+    set y (value) {
+        this.targetY = value;
+        this.updateTween();
+    }
 
 }
 
@@ -46,6 +60,16 @@ OMNI.Element.Block.prototype = {
  */
 OMNI.Element.Block.prototype.update =  function() {
     // TODO
+}
+
+/**
+ *
+ * 트윈 업데이트
+ *
+ */
+OMNI.Element.Block.prototype.updateTween =  function() {
+    this.tween.to({ x: this.targetX,
+                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
 }
 
 /**

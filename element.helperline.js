@@ -26,24 +26,43 @@ OMNI.Element.HelperLine = function(orientation) {
     }
     this.graphics.interactive = true;
 
+    // 트윈
+    this.tween = new TWEEN.Tween(this.graphics);
+
+    this.targetX = 0;
+    this.targetY = 0;
+    this.targetWidth = this.graphics.width;
+    this.targetHeight = this.graphics.height;
+
     this.update();
 };
 
 // public 메서드
 OMNI.Element.HelperLine.prototype = {
 
-    get width () { return this.graphics.width; },
-    set width (value) { this.graphics.width = value },
+    get width () { return this.targetWidth; },
+    set width (value) {
+        this.targetWidth = value;
+        this.updateTween();
+    },
 
-    get height () { return this.graphics.height; },
-    set height (value) { this.graphics.height = value },
+    get height () { return this.targetHeight; },
+    set height (value) {
+        this.targetHeight = value;
+        this.updateTween();
+    },
 
-    get x () { return this.graphics.x; },
-    set x (value) { this.graphics.x = value },
+    get x () { return this.targetX; },
+    set x (value) {
+        this.targetX = value;
+        this.updateTween();
+    },
 
-    get y () { return this.graphics.y; },
-    set y (value) { this.graphics.y = value }
-
+    get y () { return this.targetY; },
+    set y (value) {
+        this.targetY = value;
+        this.updateTween();
+    }
 }
 
 /**
@@ -53,6 +72,18 @@ OMNI.Element.HelperLine.prototype = {
  */
 OMNI.Element.HelperLine.prototype.update =  function() {
     // TODO
+}
+
+/**
+ *
+ * 트윈 업데이트
+ *
+ */
+OMNI.Element.HelperLine.prototype.updateTween =  function() {
+    this.tween.to({ width: this.targetWidth,
+                    height: this.targetHeight,
+                    x: this.targetX,
+                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
 }
 
 /**

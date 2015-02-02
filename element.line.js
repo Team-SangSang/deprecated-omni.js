@@ -9,20 +9,33 @@ OMNI.Element.Line = function() {
     this.parent;
 
     // 그래픽
-    this.graphics = new PIXI.Graphics();
-    this.graphics.beginFill(0);
-    this.graphics.drawRect(0, 0, 10, 10);
+    this.graphics = new PIXI.DisplayObjectContainer();
+    this.lineGraphic = new PIXI.Graphics();
+    this.lineGraphic.beginFill(0);
+    this.lineGraphic.drawRect(0, 0, 10, 10);
+
+    this.graphics.addChild(this.lineGraphic);
 
     // 구성 요소
     this.elements = [];
     this.elementsContainer = new PIXI.DisplayObjectContainer();
 
-    this.maximimElementWidthOfRight = 0;
-    this.maximimElementWidthOfLeft = 0;
+    this.maximumElementWidthOfRight = 0;
+    this.maximumElementWidthOfLeft = 0;
+    this.maximumElementHeight = 0;
 
-    this.graphics.width = OMNI.Graphics.LINE_THICKNESS;
-    this.graphics.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
+    this.lineGraphic.width = OMNI.Graphics.LINE_THICKNESS;
+    this.lineGraphic.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
     this.graphics.interactive = true;
+
+    // 트윈
+    this.tween = new TWEEN.Tween(this.lineGraphic);
+    this.elementsTween = new TWEEN.Tween(this.elementsContainer);
+
+    this.targetX = 0;
+    this.targetY = 0;
+    this.targetWidth = this.lineGraphic.width;
+    this.targetHeight = this.lineGraphic.height;
 
     this.update();
 };
@@ -30,26 +43,36 @@ OMNI.Element.Line = function() {
 // public 메서드
 OMNI.Element.Line.prototype = {
 
-    get width () { return this.graphics.width; },
-    set width (value) { this.graphics.width = value; },
+    get width () { return this.targetWidth; },
+    set width (value) {
+        this.targetWidth = value;
+        this.updateTween();
+    },
 
-    get height () { return this.graphics.height; },
-    set height (value) { this.graphics.height = value; },
+    get height () { return this.targetHeight; },
+    set height (value) {
+        this.targetHeight = value;
+        this.updateTween();
+    },
 
-    get x () { return this.graphics.x; },
+    get x () { return this.targetX; },
     set x (value) {
-        this.graphics.x = value;
-        this.elementsContainer.x = value;
+        this.targetX = value;        
+        this.updateTween();
+        this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
     },
 
-    get y () { return this.graphics.y; },
+    get y () { return this.targetY; },
     set y (value) {
-        this.graphics.y = value;
-        this.elementsContainer.y = value;
+        this.targetY = value;        
+        this.updateTween();
+        this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
     },
 
-    get elementsWidthOfRight () { return this.maximimElementWidthOfRight; },
-    get elementsWidthOfLeft () { return this.maximimElementWidthOfLeft; }
+    get elementsWidthOfRight () { return this.maximumElementWidthOfRight; },
+    get elementsWidthOfLeft () { return this.maximumElementWidthOfLeft; },
+    get elementsWidth () { return this.maximumElementWidthOfRight + this.maximumElementWidthOfLeft; },
+    get elementsHeight () { return this.maximumElementHeight; }
 }
 
 /**
@@ -59,13 +82,15 @@ OMNI.Element.Line.prototype = {
  */
 OMNI.Element.Line.prototype.update = function() {
 
+    var that = this;
+
     // 구성 요소 세로 정렬
     var relativeX = OMNI.Graphics.LINE_THICKNESS / 2;
     var relativeY = 0;
 
     var accumulatedHeight = OMNI.Graphics.SPACE_Y;
-    this.maximimElementWidthOfRight = 0;
-    this.maximimElementWidthOfLeft = 0;
+    this.maximumElementWidthOfRight = 0;
+    this.maximumElementWidthOfLeft = 0;
 
     for (var i = 0; i < this.elements.length; i++) {
 
@@ -77,36 +102,41 @@ OMNI.Element.Line.prototype.update = function() {
 
             var halfWidth = element.width / 2;
 
-            if(halfWidth > this.maximimElementWidthOfRight) { this.maximimElementWidthOfRight = halfWidth; }
-            if(halfWidth > this.maximimElementWidthOfLeft) { this.maximimElementWidthOfLeft = halfWidth; }            
+            if(halfWidth > this.maximumElementWidthOfRight) { this.maximumElementWidthOfRight = halfWidth; }
+            if(halfWidth > this.maximumElementWidthOfLeft) { this.maximumElementWidthOfLeft = halfWidth; }      
 
-        } else {
+        } else {            
             element.x = relativeX;
 
-            if(element.widthOfRight > this.maximimElementWidthOfRight) { this.maximimElementWidthOfRight = element.widthOfRight; }
-            if(element.widthOfLeft > this.maximimElementWidthOfLeft) { this.maximimElementWidthOfLeft = element.widthOfLeft; }
-        }
+            if(element.widthOfRight > this.maximumElementWidthOfRight) { this.maximumElementWidthOfRight = element.widthOfRight; }
+            if(element.widthOfLeft > this.maximumElementWidthOfLeft) { this.maximumElementWidthOfLeft = element.widthOfLeft; }
+        }        
 
         element.y = relativeY + accumulatedHeight;
 
         accumulatedHeight += element.height + OMNI.Graphics.SPACE_Y;
+        
     };
 
-    // 그래픽 업데이트
-    this.graphics.height = Math.max(OMNI.Graphics.MIN_LINE_LENGTH, accumulatedHeight);
-
-    // hitArea 업데이트
-    /*
-    this.graphics.hitArea.x = - OMNI.Graphics.HITAREA_PADDING_X;
-    this.graphics.hitArea.y = - OMNI.Graphics.HITAREA_PADDING_Y;
-    this.graphics.hitArea.height = totalHeight + OMNI.Graphics.HITAREA_PADDING_Y * 2;
-    this.graphics.hitArea.width = OMNI.Graphics.LINE_THICKNESS + OMNI.Graphics.HITAREA_PADDING_X * 2;
-    */
+    this.maximumElementHeight = Math.max(OMNI.Graphics.MIN_LINE_LENGTH, accumulatedHeight);
+    this.height = this.maximumElementHeight;
 
     // 부모 객체 업데이트 (상향 이벤트)
     if (this.parent != undefined) {
         this.parent.update();
     }
+}
+
+/**
+ *
+ * 트윈 업데이트
+ *
+ */
+OMNI.Element.Line.prototype.updateTween =  function() {
+    this.tween.to({ width: this.targetWidth,
+                    height: this.targetHeight,
+                    x: this.targetX,
+                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
 }
 
 /**
@@ -118,10 +148,61 @@ OMNI.Element.Line.prototype.addElement = function(element) {
 
     element.parent = this;
 
-    this.elementsContainer.addChild(element.graphics);
+    this.elementsContainer.addChild(element.graphics);    
     this.elements.push(element);
 
     this.update();
+}
+
+/**
+ *
+ * 라인의 특정 위치에 새 코드 요소를 추가한다.
+ *
+ */
+OMNI.Element.Line.prototype.addElementAt = function(element, index) {
+
+    element.parent = this;
+
+    this.elementsContainer.addChild(element.graphics);
+    this.elements.splice(index, 0, element);
+
+    this.update();
+}
+
+/**
+ *
+ * 라인에서 코드 요소를 삭제한다.
+ *
+ */
+OMNI.Element.Line.prototype.removeElement = function(element) {
+
+    var index = this.elements.indexOf(element);
+
+    if (index > -1){
+        element.parent = null;
+
+        this.elementsContainer.removeChild(element.graphics);
+        this.elements.splice(index, 1);
+
+        this.update(); 
+    }
+}
+
+/**
+ *
+ * 라인에서 특정 위치에 있는 코드 요소를 삭제한다.
+ *
+ */
+OMNI.Element.Line.prototype.removeElementAt = function(index ) {
+
+    if (index > -1 && index < this.elements.length){
+        this.elements[index].parent = null;
+
+        this.elementsContainer.removeChild(this.elements[index].graphics);
+        this.elements.splice(index, 1);
+
+        this.update(); 
+    }
 }
 
 /**

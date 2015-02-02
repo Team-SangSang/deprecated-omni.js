@@ -10,6 +10,7 @@
                 }
         </style>
         <script src="./libs/pixijs/pixi.2.2.5.js"></script>
+        <script src="./libs/tweenjs/tween.r15.min.js"></script>
         <script src="./workspace.js"></script>
         <script src="./element.line.js"></script>
         <script src="./element.branch.js"></script>
@@ -30,6 +31,7 @@
                 var branch4 = workspace.addBranch(branch1.elseProcedure,true);
                 var branch5 = workspace.addBranch(branch4.ifProcedure,false);
                 workspace.addBlock(branch5.ifProcedure);
+                workspace.addBlock(branch4.ifProcedure,false);
                 var branch2 = workspace.addBranch(branch1.ifProcedure, false);
                 workspace.addBlock(branch2.ifProcedure);
                 workspace.addBlock(branch1.ifProcedure);

@@ -22,7 +22,10 @@ OMNI.Graphics = {
         0, 1, 0, 0.5,
         0, 0, 1, 0.5,
         0, 0, 0, 1
-    ]
+    ],
+
+    EASING: TWEEN.Easing.Elastic.Out,
+    
 }
 
 /**
@@ -71,11 +74,13 @@ OMNI.Workspace = function(width, height) {
      *
      */
     var that = this;
-    function animate() {
+    function animate(time) {
+        requestAnimationFrame(animate);
+        TWEEN.update(time)
         that.renderer.render(that.stage);
-        requestAnimFrame(animate);
+        
     }
-    requestAnimFrame(animate);
+    animate();
 };
 
 /**
@@ -95,14 +100,11 @@ OMNI.Workspace.prototype.update = function() {
         procedure.x = accumulatedWidth;
         procedure.y = OMNI.Graphics.PADDING_Y;
 
-        procedure.update();
-
-        accumulatedWidth += procedure.width + OMNI.Graphics.SPACE_X;
+        accumulatedWidth += procedure.elementsWidth + OMNI.Graphics.SPACE_X;
     }
 
     // 여백이 남으면 레이어를 중앙에 정렬
     var totalWidth = accumulatedWidth - OMNI.Graphics.SPACE_X + OMNI.Graphics.PADDING_X;
-
     if (totalWidth < this.renderer.width) {
         this.layer[0].x = (this.renderer.width - totalWidth) / 2;
     }
@@ -141,14 +143,13 @@ OMNI.Workspace.prototype.addProcedure = function() {
 
     // 프로시저의 기반은 라인이다.
     var procedure = new OMNI.Element.Line();
+    procedure.parent = this;
 
     // 등록
     this.procedures.push(procedure);
     this.layer[0].addChild(procedure.graphics);
     this.layer[0].addChild(procedure.elementsContainer);
-
-    this.update();
-
+    
     // 프로시저 마우스 이벤트
     procedure.graphics.mouseover = function() {
         procedure.highlight(true);

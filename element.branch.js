@@ -54,12 +54,28 @@ OMNI.Element.Branch = function(orientation) {
 
     var that = this;
 
-    ifContainer.mouseover = function(eventData) { that.highlightIf(true); };
-    ifContainer.mouseout = function(eventData) { that.highlightIf(false); };
-    elseContainer.mouseover = function(eventData) { that.highlightElse(true);};
-    elseContainer.mouseout = function(eventData) { that.highlightElse(false); };
+    var tempBlock = new OMNI.Element.Block();
+    ifContainer.mouseover = function(eventData) { that.highlightIf(true); setTimeout(showPreview,1); };
+    ifContainer.mouseout = function(eventData) { that.highlightIf(false); setTimeout(closePreview,1); };
+    elseContainer.mouseover = function(eventData) { that.highlightElse(true); };
+    elseContainer.mouseout = function(eventData) { that.highlightElse(false);  };
     this.entry.mouseover = function(eventData) { that.highlightEntry(true); };
-    this.entry.mouseout = function(eventData) { that.highlightEntry(false);};
+    this.entry.mouseout = function(eventData) { that.highlightEntry(false); };
+
+    function showPreview(){
+        that.ifLine.addElement(tempBlock, true);
+    }
+
+    function closePreview(){
+        that.ifLine.removeElement(tempBlock, true);
+    }
+
+    // 트윈
+    this.tween = new TWEEN.Tween(this.graphics);
+    this.targetX = 0;
+    this.targetY = 0;
+    this.targetWidth = 0;
+    this.targetHeight = 0;
 
     this.update();
 };
@@ -67,11 +83,9 @@ OMNI.Element.Branch = function(orientation) {
 // public 메서드
 OMNI.Element.Branch.prototype = {
 
-    get width () { return this.graphics.width; },
-    set width (value) { this.graphics.width = value },
+    get width () { return this.widthOfLeft + this.widthOfRight; },
 
-    get height () { return this.graphics.height; },
-    set height (value) { this.graphics.height = value },
+    get height () { return this.targetHeight; },
 
     get widthOfLeft () { 
         if (this.orientation) {
@@ -88,11 +102,17 @@ OMNI.Element.Branch.prototype = {
         }
     },
 
-    get x () { return this.graphics.x; },
-    set x (value) { this.graphics.x = value },
+    get x () { return this.targetX; },
+    set x (value) {
+        this.targetX = value;
+        this.updateTween();
+    },
 
-    get y () { return this.graphics.y; },
-    set y (value) { this.graphics.y = value },
+    get y () { return this.targetY; },
+    set y (value) {
+        this.targetY = value;
+        this.updateTween();
+    },
 
     get orientation () { return this.orientation_; },
     set orientation (value) { this.orientation_ = value; this.update(); },
@@ -110,14 +130,17 @@ OMNI.Element.Branch.prototype = {
  */
 OMNI.Element.Branch.prototype.update = function() {
 
+    var that = this;
+
     // 엔트리 블록 중앙 정렬
     this.entry.x =  - this.entry.width / 2;
     this.entry.y = 0;
 
     // if와 else 중 더 긴 것으로 세로 길이 통일
-    var maximumLineHeight = Math.max(this.ifLine.height, this.elseLine.height);
-    this.ifLine.height = maximumLineHeight;
-    this.elseLine.height = maximumLineHeight;
+    var maximumLineHeight = Math.max(this.ifLine.elementsHeight, this.elseLine.elementsHeight);
+
+    that.ifLine.height = maximumLineHeight;
+    that.elseLine.height = maximumLineHeight;    
 
     // 가로선 길이 설정
     var horizontalLineWidth;
@@ -128,6 +151,7 @@ OMNI.Element.Branch.prototype.update = function() {
         horizontalLineWidth = Math.max(this.entry.width / 2, this.elseLine.elementsWidthOfLeft);
         horizontalLineWidth += Math.max(this.ifLine.elementsWidthOfRight, OMNI.Graphics.MIN_LINE_LENGTH) + OMNI.Graphics.SPACE_X;
     }
+
     this.horizontal_top.width = horizontalLineWidth;
     this.horizontal_bottom.width = horizontalLineWidth;
 
@@ -142,7 +166,7 @@ OMNI.Element.Branch.prototype.update = function() {
         this.horizontal_bottom.x = this.horizontal_top.x;
         this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
 
-        this.ifLine.x = - startX + this.horizontal_top.width;
+        this.ifLine.x = - startX + horizontalLineWidth;
         this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
 
         this.elseLine.x = - startX;
@@ -156,17 +180,29 @@ OMNI.Element.Branch.prototype.update = function() {
         this.horizontal_bottom.x = this.horizontal_top.x;
         this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + OMNI.Graphics.LINE_THICKNESS;
 
-        this.ifLine.x = - startX - this.horizontal_top.width;
+        this.ifLine.x = - startX - horizontalLineWidth;
         this.ifLine.y = this.horizontal_top.y + OMNI.Graphics.LINE_THICKNESS;
 
         this.elseLine.x = - startX;
         this.elseLine.y = this.ifLine.y + OMNI.Graphics.LINE_THICKNESS;
     }
 
+    this.targetHeight = maximumLineHeight + this.entry.height / 2 + OMNI.Graphics.LINE_THICKNESS + OMNI.Graphics.SPACE_Y;
+
     // 부모 객체 업데이트 (상향 이벤트)
     if (this.parent != undefined) {
         this.parent.update();
     }
+}
+
+/**
+ *
+ * 트윈 업데이트
+ *
+ */
+OMNI.Element.Branch.prototype.updateTween =  function() {
+    this.tween.to({ x: this.targetX,
+                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
 }
 
 /**
