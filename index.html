@@ -12,16 +12,19 @@
         <script src="./libs/pixijs/pixi.2.2.5.js"></script>
         <script src="./libs/tweenjs/tween.r15.min.js"></script>
         <script src="./workspace.js"></script>
+        <script src="./workspace.palette.js"></script>
         <script src="./element.line.js"></script>
         <script src="./element.branch.js"></script>
         <script src="./element.block.js"></script>
         <script src="./element.helperline.js"></script>
+        <script src="./element.hintspot.js"></script>
+        <script src="./trigger.beginning.js"></script>
+        <script src="./trigger.key.js"></script>
     </head>
     <body>
         <script>
-                var workspace = new OMNI.Workspace(1200, 600);
-                
-                var procedure1 = workspace.addProcedure();
+                var workspace = new OMNI.Workspace(1200, 620);
+                /*var procedure1 = workspace.addProcedure();
                 workspace.addBlock(procedure1);
                 workspace.addBlock(procedure1);
                 var branch1 = workspace.addBranch(procedure1, true);
@@ -38,7 +41,7 @@
                 workspace.addBlock(procedure1);
                 var branch3 = workspace.addBranch(procedure1, false);
                 workspace.addBlock(branch3.ifProcedure);
-
+                */
                 document.body.appendChild(workspace.getDomElement());
         </script>
     </body>

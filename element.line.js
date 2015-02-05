@@ -3,18 +3,35 @@
  * 동작하는 세로선
  *
  */
-OMNI.Element.Line = function() {
+OMNI.Element.Line = function(isProcedure, trigger) {
+
+    var that = this;
 
     // 부모 객체(element 거나 없음)
     this.parent;
 
+    // 프로시저 여부
+    this.isProcedure = isProcedure || false;
+
     // 그래픽
     this.graphics = new PIXI.DisplayObjectContainer();
+
+    this.line = new PIXI.DisplayObjectContainer();
     this.lineGraphic = new PIXI.Graphics();
     this.lineGraphic.beginFill(0);
     this.lineGraphic.drawRect(0, 0, 10, 10);
+    this.line.addChild(this.lineGraphic);
+    this.graphics.addChild(this.line);
 
-    this.graphics.addChild(this.lineGraphic);
+    if (isProcedure) {
+        this.trigger = trigger;
+        this.trigger.graphics.x = - this.trigger.graphics.width / 2  + OMNI.Graphics.LINE_THICKNESS;
+        this.trigger.graphics.y = - this.trigger.graphics.height / 2;
+        //this.line.y = this.trigger.graphics.height;
+        this.graphics.addChild(this.trigger.graphics);
+    }
+
+    this.line.interactive = true;
     this.graphics.interactive = true;
 
     // 구성 요소
@@ -23,11 +40,11 @@ OMNI.Element.Line = function() {
 
     this.maximumElementWidthOfRight = 0;
     this.maximumElementWidthOfLeft = 0;
-    this.maximumElementHeight = 0;
-    
+    this.maximumElementHeight = 0;    
 
     // 트윈
-    this.tween = new TWEEN.Tween(this.lineGraphic);
+    this.tween = new TWEEN.Tween(this.graphics);
+    this.lineTween = new TWEEN.Tween(this.lineGraphic)
     this.elementsTween = new TWEEN.Tween(this.elementsContainer);
 
     // 선 굵기
@@ -41,6 +58,13 @@ OMNI.Element.Line = function() {
     this.targetWidth = this.lineGraphic.width;
     this.targetHeight = this.lineGraphic.height;
 
+    this.line.mouseover = function(e) {
+        that.onMouseRollOver(e);
+    }
+    this.line.mouseout = function(e) {
+        that.onMouseRollOut(e);
+    }
+
     this.update();
 };
 
@@ -50,8 +74,7 @@ OMNI.Element.Line.prototype = {
     get thickness () { return this._thickness; },
     set thickness (value) {
         this._thickness = value;        
-        this.targetWidth = value;      
-
+        this.targetWidth = value;
         this.updateTween();
     },
 
@@ -70,15 +93,13 @@ OMNI.Element.Line.prototype = {
     get x () { return this.targetX; },
     set x (value) {
         this.targetX = value;        
-        this.updateTween();
-        this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
+        this.updateTween();        
     },
 
     get y () { return this.targetY; },
     set y (value) {
         this.targetY = value;        
-        this.updateTween();
-        this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
+        this.updateTween();        
     },
 
     get elementsWidthOfRight () { return this.maximumElementWidthOfRight; },
@@ -115,7 +136,7 @@ OMNI.Element.Line.prototype.update = function() {
     var relativeX = this.thickness / 2;
     var relativeY = 0;
 
-    var accumulatedHeight = OMNI.Graphics.SPACE_Y;
+    var accumulatedHeight = OMNI.Graphics.SPACE_Y * 2;
     this.maximumElementWidthOfRight = 0;
     this.maximumElementWidthOfLeft = 0;
 
@@ -160,10 +181,10 @@ OMNI.Element.Line.prototype.update = function() {
  *
  */
 OMNI.Element.Line.prototype.updateTween =  function() {
-    this.tween.to({ width: this.targetWidth,
-                    height: this.targetHeight,
-                    x: this.targetX,
+    this.tween.to({ x: this.targetX,
                     y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
+    this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
+    this.lineTween.to({width: this.targetWidth, height: this.targetHeight}, 400).easing(OMNI.Graphics.EASING).start();
 }
 
 /**
@@ -239,8 +260,109 @@ OMNI.Element.Line.prototype.removeElementAt = function(index ) {
  */
 OMNI.Element.Line.prototype.highlight = function(on) {
     if (on == true) {
-        this.graphics.filters = [OMNI.Graphics.highlightFilter];
+        this.lineGraphic.filters = [OMNI.Graphics.highlightFilter];
     } else {
-        this.graphics.filters = null;
+        this.lineGraphic.filters = null;
+    }
+}
+
+/**
+ *
+ * 힌트 스팟 추가
+ *
+ */
+OMNI.Element.Line.prototype.addHint = function(index) {
+
+    if (this.hintspot == null) {
+        this.hintspot = new OMNI.Element.HintSpot();
+    }
+    this.hintspot.radius = this.thickness / 2;
+
+    this.line.addChild(this.hintspot.graphics);
+    this.elements.splice(index, 0, this.hintspot);
+
+    var that = this;
+    this.hintspot.graphics.click = function() {
+        if (OMNI.Shared.mode == 1){
+            that.hintspot.showDirectionBar();
+
+            that.hintspot.directionBarLeft.click = function() {
+                that.addElementAt(new OMNI.Element.Branch(false), index);
+                that.removeHint();
+            }
+
+            that.hintspot.directionBarRight.click = function() {
+                that.addElementAt(new OMNI.Element.Branch(true), index);
+                that.removeHint();
+            }
+
+        } else if (OMNI.Shared.mode == 2){
+            that.addElementAt(new OMNI.Element.Block(false), index);
+            that.removeHint();
+        } else {
+            that.addElementAt(new OMNI.Element.Block(true), index);
+            that.removeHint();
+        }
+        
+    }
+
+    this.update();
+}
+
+OMNI.Element.Line.prototype.removeHint = function() {
+
+    this._currentHintSpotIndex = -1;
+
+    var index = this.elements.indexOf(this.hintspot);
+
+    if (index > -1) {
+        this.hintspot.closeDirectionBar();
+        this.line.removeChild(this.hintspot.graphics);
+        this.elements.splice(index, 1);
+    }
+    this.update();
+}
+
+OMNI.Element.Line.prototype.onMouseRollOver = function(event) {
+
+    this.onMouseMove(event);
+
+    var that = this;
+    this.line.mousemove = function(e) { that.onMouseMove(e); };
+    
+}
+
+OMNI.Element.Line.prototype.onMouseRollOut = function(event) {
+    this.line.mousemove = null;
+    this.removeHint();
+}
+
+
+OMNI.Element.Line.prototype.onMouseMove = function(event) {    
+    this._localPoint = event.getLocalPosition(this.line, this._localPoint);
+
+    //console.log(Math.floor(this._localPoint.x) +" / "+ Math.floor(this._localPoint.y));
+    // 마우스가 위치한 인덱스를 찾는다.
+    var accumulatedHeight = 0;
+    var previousHalfHeight = this.thickness;
+    var index = this.elements.length;
+
+    this._localPoint.y -= OMNI.Graphics.SPACE_Y;
+
+   for (var i = 0; i < this.elements.length; i++) {
+        var element = this.elements[i];           
+        if (this._localPoint.y > accumulatedHeight - previousHalfHeight) {
+            previousHalfHeight = element.height / 2;
+            if (this._localPoint.y < accumulatedHeight + OMNI.Graphics.SPACE_Y + previousHalfHeight){
+                index = i;
+                break;
+            }
+        }
+        accumulatedHeight += element.height + OMNI.Graphics.SPACE_Y;
+    }
+    if (index != this._currentHintSpotIndex) {        
+        this.removeHint();
+        this.addHint(index);
+        this._currentHintSpotIndex = index;
     }
 }

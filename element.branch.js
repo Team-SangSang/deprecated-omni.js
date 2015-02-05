@@ -23,6 +23,12 @@ OMNI.Element.Branch = function(orientation) {
     this.horizontal_top = new OMNI.Element.HelperLine(false);
     this.horizontal_bottom = new OMNI.Element.HelperLine(false);
     
+    this.arrow = new PIXI.Sprite(PIXI.Texture.fromFrame("arrow_horizontal"));
+
+    if(orientation == false){
+        this.arrow.scale = new PIXI.Point(-1, 1);
+    }
+
     // 접힌 방향
     this.orientation_ = orientation;
     
@@ -39,6 +45,7 @@ OMNI.Element.Branch = function(orientation) {
     ifContainer.addChild(this.horizontal_top.graphics);
     ifContainer.addChild(this.horizontal_bottom.graphics);
     ifContainer.addChild(this.ifLine.graphics);
+    ifContainer.addChild(this.arrow);
 
     elseContainer.addChild(this.elseLine.graphics);
 
@@ -55,8 +62,8 @@ OMNI.Element.Branch = function(orientation) {
     var that = this;
 
     var tempBlock = new OMNI.Element.Block();
-    ifContainer.mouseover = function(eventData) { that.highlightIf(true); setTimeout(showPreview,1); };
-    ifContainer.mouseout = function(eventData) { that.highlightIf(false); setTimeout(closePreview,1); };
+    ifContainer.mouseover = function(eventData) { that.highlightIf(true); };
+    ifContainer.mouseout = function(eventData) { that.highlightIf(false); };
     elseContainer.mouseover = function(eventData) { that.highlightElse(true); };
     elseContainer.mouseout = function(eventData) { that.highlightElse(false);  };
     this.entry.mouseover = function(eventData) { that.highlightEntry(true); };
@@ -72,7 +79,7 @@ OMNI.Element.Branch = function(orientation) {
 
     // 트윈
     this.tween = new TWEEN.Tween(this.graphics);
-
+    this.atween = new TWEEN.Tween(this.arrow);
      // 선 굵기
     this.thickness = OMNI.Graphics.LINE_THICKNESS;
 
@@ -192,6 +199,8 @@ OMNI.Element.Branch.prototype.update = function() {
         this.elseLine.x = - startX;
         this.elseLine.y = this.ifLine.y + this.thickness;
 
+        this.atween.to({y: this.horizontal_bottom.y - this.arrow.height / 2 + this.thickness / 2 }, 400).easing(OMNI.Graphics.EASING).start();
+
     } else {
 
         this.horizontal_top.x = - startX - this.horizontal_top.width;
@@ -205,6 +214,8 @@ OMNI.Element.Branch.prototype.update = function() {
 
         this.elseLine.x = - startX;
         this.elseLine.y = this.ifLine.y + this.thickness;
+
+        this.atween.to({y: this.horizontal_bottom.y - this.arrow.height / 2 + this.thickness / 2 }, 400).easing(OMNI.Graphics.EASING).start();
     }
 
     this.targetHeight = maximumLineHeight + this.entry.height / 2 + this.thickness + OMNI.Graphics.SPACE_Y;

@@ -3,7 +3,7 @@
  * 블록
  *
  */
-OMNI.Element.Block = function() {
+OMNI.Element.Block = function(test) {
 
     // 부모 객체(라인)
     this.parent;
@@ -13,10 +13,14 @@ OMNI.Element.Block = function() {
 
     var size = Math.random() * 60 + 45
 
-    this.graphics = new PIXI.Graphics();
-    this.graphics.beginFill(Math.random() * 0xFFFFFF);
-    this.graphics.lineStyle(2, 0x000000);
-    this.graphics.drawRect(0, 0, size, size/4);
+    if (test == true){
+        this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("block"));
+    } else {
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(Math.random() * 0xFFFFFF);
+        this.graphics.lineStyle(2, 0x000000);
+        this.graphics.drawRect(0, 0, size, size/4);
+    }
 
     this.graphics.interactive = true;
 

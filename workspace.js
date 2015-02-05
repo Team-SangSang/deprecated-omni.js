@@ -1,11 +1,12 @@
 var OMNI = {};
 OMNI.Element = {};
+OMNI.Trigger = {};
 
 // 그래픽스 관련 설정
 OMNI.Graphics = {
 
-    PADDING_X: 30,
-    PADDING_Y: 30,
+    PADDING_X: 10,
+    PADDING_Y: 50,
 
     HITAREA_PADDING_X: 15,
     HITAREA_PADDING_Y: 15,
@@ -13,8 +14,8 @@ OMNI.Graphics = {
     SPACE_X: 15,
     SPACE_Y: 15,
 
-    LINE_THICKNESS: 5,
-    LINE_THICKNESS_ADDER: 1.5,
+    LINE_THICKNESS: 7,
+    LINE_THICKNESS_ADDER: -0.1,
 
     MIN_LINE_LENGTH: 20,
 
@@ -29,6 +30,10 @@ OMNI.Graphics = {
     
 }
 
+OMNI.Shared = {
+    mode: 1
+}
+
 /**
  *
  * 모든 작업이 시작되는 곳
@@ -38,6 +43,8 @@ OMNI.Workspace = function(width, height) {
 
     "use strict";
     
+    var that = this;
+
     // 모든 요소들이 올려질 스테이지
     this.stage = new PIXI.Stage(0xDDDDDD);
 
@@ -45,7 +52,7 @@ OMNI.Workspace = function(width, height) {
     this.renderer = new PIXI.autoDetectRenderer(width, height);
 
     // 레이어
-    this.layer = [];
+    this.layer = [];    
 
     // 최상위 작업 유닛인 프로시저
     this.procedures = [];
@@ -58,14 +65,20 @@ OMNI.Workspace = function(width, height) {
     OMNI.Graphics.highlightFilter = new PIXI.ColorMatrixFilter();
     OMNI.Graphics.highlightFilter.matrix = OMNI.Graphics.HIGHLIGHT_MATRIX;
 
-    //loadGraphicsResources(onLoad);
+    // 파레트 로드
+    loadGraphicsResources(function(){
+        that.palette = new OMNI.Workspace.Palette(that);
+        that.layer[1].addChild(that.palette.graphics);
+
+        that.addProcedure(false);
+    });
     /**
      *
      * 그래픽 요소를 로드한다.
      *
      */
     function loadGraphicsResources(onLoad) {
-        var loader = new PIXI.AssetLoader(["./omnigram.json"]);
+        var loader = new PIXI.AssetLoader(["./gui.json"]);
         loader.onComplete = onLoad;
         loader.load();
     }
@@ -74,12 +87,11 @@ OMNI.Workspace = function(width, height) {
      * 실시간 랜더링
      *
      */
-    var that = this;
+    
     function animate(time) {
         requestAnimationFrame(animate);
         TWEEN.update(time)
         that.renderer.render(that.stage);
-        
     }
     animate();
 };
@@ -101,14 +113,16 @@ OMNI.Workspace.prototype.update = function() {
         procedure.x = accumulatedWidth;
         procedure.y = OMNI.Graphics.PADDING_Y;
 
-        accumulatedWidth += procedure.elementsWidth + OMNI.Graphics.SPACE_X;
+        accumulatedWidth += procedure.graphics.width + OMNI.Graphics.SPACE_X;
     }
 
+    this.layer[0].x = 0;
     // 여백이 남으면 레이어를 중앙에 정렬
     var totalWidth = accumulatedWidth - OMNI.Graphics.SPACE_X + OMNI.Graphics.PADDING_X;
-    if (totalWidth < this.renderer.width) {
-        this.layer[0].x = (this.renderer.width - totalWidth) / 2;
+    if (totalWidth < (this.renderer.width - 200)) {
+        this.layer[0].x = (this.renderer.width - 200 - totalWidth) / 2;
     }
+    this.layer[0].x += 200;
 }
 
 /**
@@ -140,10 +154,10 @@ OMNI.Workspace.prototype.addBranch = function(procedure, flipped) {
  * 새 프로시저를 스테이지에 추가한다.
  *
  */
-OMNI.Workspace.prototype.addProcedure = function() {
+OMNI.Workspace.prototype.addProcedure = function(key) {
 
     // 프로시저의 기반은 라인이다.
-    var procedure = new OMNI.Element.Line();
+    var procedure = new OMNI.Element.Line(true,  key ? new OMNI.Trigger.Key() : new OMNI.Trigger.Beginning());
     procedure.parent = this;
 
     // 등록
@@ -159,6 +173,8 @@ OMNI.Workspace.prototype.addProcedure = function() {
     procedure.graphics.mouseout = function() {
         procedure.highlight(false);
     }
+
+    this.update();
 
     return procedure;
 }
