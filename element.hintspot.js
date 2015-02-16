@@ -131,12 +131,12 @@ OMNI.Element.HintSpot.prototype.showDirectionBar = function () {
         this.directionBarLeft = new PIXI.Sprite(PIXI.Texture.fromFrame("direction_bar_left"));
 
         this.directionBarLeft.x = -this.directionBarLeft.width;
-        this.directionBarLeft.y = -this.directionBarLeft.height / 2;
+        //this.directionBarLeft.y = -this.directionBarLeft.height / 2;
 
-        this.directionBarRight.y = -this.directionBarRight.height / 2;
+        //this.directionBarRight.y = -this.directionBarRight.height / 2;
 
         this.directionBar.x = -this.directionBar.width / 2;
-        this.directionBar.y = -this.directionBar.height / 2;
+        //this.directionBar.y = -this.directionBar.height / 2;
 
         this.directionBarLeft.interactive = true;
         this.directionBarRight.interactive = true;
