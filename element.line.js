@@ -1,202 +1,328 @@
+OMNI.Config.Line = {
+
+    // Gap between lines.
+    SPACING_X: 20,
+
+    // Gap between elements.
+    SPACING_Y: 15,
+
+    LENGTH_MINIMUM: 20,
+
+    HIGHLIGHT_MATRIX: [
+        1, 0, 0, 0.5,
+        0, 1, 0, 0.5,
+        0, 0, 1, 0.5,
+        0, 0, 0, 1],
+    HIGHLIGHT_FILTER: new PIXI.ColorMatrixFilter(),
+
+    THICKNESS_MINIMUM: 7,
+    THICKNESS_MAXIMUM: 40,
+    THICKNESS_INCREMENT: 1.5
+}
+
 /**
+ * Represents a line that codes are being placed on. 
+ * It expresses the flow of the program. It is the fundamental ingredient of overall logic.
  *
- * 동작하는 세로선
- *
+ * @author HyunJun Kim
+ * @constructor
  */
-OMNI.Element.Line = function(isProcedure, trigger) {
+OMNI.Element.Line = function () {
 
-    var that = this;
+    var self = this;
 
-    // 부모 객체(element 거나 없음)
+    /** Parent element */
     this.parent;
 
-    // 프로시저 여부
-    this.isProcedure = isProcedure || false;
-
-    // 그래픽
+    /** Graphics */
     this.graphics = new PIXI.DisplayObjectContainer();
 
-    this.line = new PIXI.DisplayObjectContainer();
-    this.lineGraphic = new PIXI.Graphics();
-    this.lineGraphic.beginFill(0);
-    this.lineGraphic.drawRect(0, 0, 10, 10);
-    this.line.addChild(this.lineGraphic);
-    this.graphics.addChild(this.line);
-
-    if (isProcedure) {
-        this.trigger = trigger;
-        this.trigger.graphics.x = - this.trigger.graphics.width / 2  + OMNI.Graphics.LINE_THICKNESS;
-        this.trigger.graphics.y = - this.trigger.graphics.height / 2;
-        //this.line.y = this.trigger.graphics.height;
-        this.graphics.addChild(this.trigger.graphics);
-    }
-
-    this.line.interactive = true;
-    this.graphics.interactive = true;
-
-    // 구성 요소
-    this.elements = [];
+    this.lineGraphicsContainer = new PIXI.DisplayObjectContainer();
     this.elementsContainer = new PIXI.DisplayObjectContainer();
+    
+    this.graphics.addChild(this.lineGraphicsContainer);
 
-    this.maximumElementWidthOfRight = 0;
-    this.maximumElementWidthOfLeft = 0;
-    this.maximumElementHeight = 0;    
+    /** Line Graphics */
+    this.lineGraphics = this.createLineGraphics();
+    this.lineGraphicsContainer.addChild(this.lineGraphics);
 
-    // 트윈
+    /** Line Hintspot */
+    this.hintspot = new OMNI.Element.HintSpot();
+    this.hintspot.visible = false;
+    this.lineGraphicsContainer.addChild(this.hintspot.graphics);
+
+    /** Line thickness */
+    this.lineGraphics.width = OMNI.Config.Line.THICKNESS_MINIMUM;
+    this.lineGraphics.height = OMNI.Config.Line.LENGTH_MINIMUM;
+    this._thickness = OMNI.Config.Line.THICKNESS_MINIMUM;
+    this._thicknessSync = 0;
+
+    /** Children elements */
+    this.elements = [];
+
+    /** Tween */
     this.tween = new TWEEN.Tween(this.graphics);
-    this.lineTween = new TWEEN.Tween(this.lineGraphic)
-    this.elementsTween = new TWEEN.Tween(this.elementsContainer);
+    this.lineGraphicsTween = new TWEEN.Tween(this.lineGraphics);
+    this.elementsContainerTween = new TWEEN.Tween(this.elementsContainer);
 
-    // 선 굵기
-    this.thickness = OMNI.Graphics.LINE_THICKNESS;
+    this.tweenTarget = {
+        x: 0,
+        y: 0
+    };
+    this.lineTweenTarget = {
+        x: - this.thickness / 2,
+        width: this.lineGraphics.width,
+        height: this.lineGraphics.height
+    };
 
-    this.lineGraphic.width = this.thickness;
-    this.lineGraphic.height = OMNI.Graphics.MIN_LINE_LENGTH * 2;
+    this.maximumElementsWidthOfRight = 0;
+    this.maximumElementsWidthOfLeft = 0;
+    this.maximumElementsHeight = 0;
 
-    this.targetX = 0;
-    this.targetY = 0;
-    this.targetWidth = this.lineGraphic.width;
-    this.targetHeight = this.lineGraphic.height;
+    this.lineGraphicsContainer.interactive = true;
 
-    this.line.mouseover = function(e) {
-        that.onMouseRollOver(e);
+    if(OMNI.Shared.CC == undefined) {
+        this.csc = true;
+        OMNI.Shared.CC = 1;
     }
-    this.line.mouseout = function(e) {
-        that.onMouseRollOut(e);
+
+    this.lineGraphicsContainer.mouseover = function (e) {
+        
+        if (OMNI.Shared.currentOccupied) {
+            return;
+        } else {
+            OMNI.Shared.currentOccupied = self;
+        }
+
+        self.onMouseRollOver(e);
+    }
+    this.lineGraphicsContainer.mouseout = function (e) {
+        
+        if (OMNI.Shared.currentOccupied != self) {
+            return;
+        } else {
+            OMNI.Shared.currentOccupied = null;
+        }
+
+        self.onMouseRollOut(e);
     }
 
     this.update();
 };
 
-// public 메서드
 OMNI.Element.Line.prototype = {
 
-    get thickness () { return this._thickness; },
-    set thickness (value) {
-        this._thickness = value;        
-        this.targetWidth = value;
+    get x() {
+        return this.tweenTarget.x;
+    },
+    set x(value) {
+        if(this.tweenTarget.x == value) return;
+        
+        this.tweenTarget.x = value;
         this.updateTween();
     },
 
-    get width () { return this.targetWidth; },
-    set width (value) {
-        this.targetWidth = value;
+    get y() {
+        return this.tweenTarget.y;
+    },
+    set y(value) {
+        if(this.tweenTarget.y == value) return;
+        
+        this.tweenTarget.y = value;
         this.updateTween();
     },
 
-    get height () { return this.targetHeight; },
-    set height (value) {
-        this.targetHeight = value;
+    get height() {
+        return this.lineTweenTarget.height;
+    },
+    set height(value) {
+        if(this.lineTweenTarget.height == value) return;
+        
+        this.lineTweenTarget.height = value;
+        this.updateTween();
+    },   
+
+    get elementsWidth() {
+        return this.maximumElementsWidthOfRight + this.maximumElementsWidthOfLeft;
+    },
+    get elementsHeight() {
+        return this.maximumElementsHeight;
+    },
+
+    get elementsWidthOfRight() {
+        return this.maximumElementsWidthOfRight;
+    },
+    get elementsWidthOfLeft() {
+        return this.maximumElementsWidthOfLeft;
+    },
+
+    get thickness() {
+        return this._thickness;
+    },
+    set thickness(value) {
+
+        if (this.lineTweenTarget.width == value) return;
+
+        this._thickness = value;
+        this.hintspot.radius = value / 2;
+
+        if (this._thicknessSync > value) return;
+
+        this.lineTweenTarget.width = value;
+        this.lineTweenTarget.x = -value / 2;
+
         this.updateTween();
     },
+    set thicknessSync(value) {
+        this._thicknessSync = value;
 
-    get x () { return this.targetX; },
-    set x (value) {
-        this.targetX = value;        
-        this.updateTween();        
-    },
+        this.lineTweenTarget.width = value;
+        this.lineTweenTarget.x = -value / 2;
 
-    get y () { return this.targetY; },
-    set y (value) {
-        this.targetY = value;        
-        this.updateTween();        
-    },
+        this.updateTween();
+    }
 
-    get elementsWidthOfRight () { return this.maximumElementWidthOfRight; },
-    get elementsWidthOfLeft () { return this.maximumElementWidthOfLeft; },
-    get elementsWidth () { return this.maximumElementWidthOfRight + this.maximumElementWidthOfLeft; },
-    get elementsHeight () { return this.maximumElementHeight; }
 }
 
 /**
  *
- * 그래픽, 위치 업데이트
+ * Update size of the current line and align child elements.
  *
  */
-OMNI.Element.Line.prototype.update = function() {
+OMNI.Element.Line.prototype.update = function () {
 
-    var that = this;
+    var maximumThickness = OMNI.Config.Line.THICKNESS_MINIMUM;
 
-    var maximumThickness = OMNI.Graphics.LINE_THICKNESS;
+    // Current line thickness is the maximum thickness in child elements + a.
 
-    // 가장 굵은 하위 요소를 찾는다.
-    for (var i = 0; i < this.elements.length; i++) {
+    for (var i in this.elements) {
+
         var element = this.elements[i];
+        
         if (element instanceof OMNI.Element.Branch) {
-            if (element.thickness > maximumThickness){
+            if (element.thickness > maximumThickness) {
                 maximumThickness = element.thickness;
             }
         }
     }
+    this.thickness = maximumThickness + OMNI.Config.Line.THICKNESS_INCREMENT;
 
-    // 굵기 설정
-    this.thickness = maximumThickness + OMNI.Graphics.LINE_THICKNESS_ADDER;
+    // Update child else line
 
-    // 구성 요소 세로 정렬
-    var relativeX = this.thickness / 2;
-    var relativeY = 0;
+    for (var i in this.elements) {
 
-    var accumulatedHeight = OMNI.Graphics.SPACE_Y * 2;
-    this.maximumElementWidthOfRight = 0;
-    this.maximumElementWidthOfLeft = 0;
+        var element = this.elements[i];
+        
+        if (element instanceof OMNI.Element.Branch) {
+            element.elseLine.thicknessSync = this.thickness + 0.4;
+        }
+    }
 
-    for (var i = 0; i < this.elements.length; i++) {
+
+    // Align child elements.
+
+    this.maximumElementsWidthOfRight = 0;
+    this.maximumElementsWidthOfLeft = 0;
+
+    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
+
+    for (var i in this.elements) {
 
         var element = this.elements[i];
 
-        // 블록은 중앙 정렬, 구조체는 원점 정렬
-        if (element instanceof OMNI.Element.Block) {            
-            element.x = relativeX - element.width / 2;
+        // Align X-Axis
 
-            var halfWidth = element.width / 2;
+        // Blocks: Center align.
+        if (element instanceof OMNI.Element.Block) {
 
-            if(halfWidth > this.maximumElementWidthOfRight) { this.maximumElementWidthOfRight = halfWidth; }
-            if(halfWidth > this.maximumElementWidthOfLeft) { this.maximumElementWidthOfLeft = halfWidth; }      
+            element.x = - element.width / 2;
 
-        } else {            
-            element.x = relativeX;
+            var halfWidth = - element.x;
 
-            if(element.widthOfRight > this.maximumElementWidthOfRight) { this.maximumElementWidthOfRight = element.widthOfRight; }
-            if(element.widthOfLeft > this.maximumElementWidthOfLeft) { this.maximumElementWidthOfLeft = element.widthOfLeft; }
-        }        
+            if (halfWidth > this.maximumElementsWidthOfRight) {
+                this.maximumElementsWidthOfRight = halfWidth;
+            }
+            if (halfWidth > this.maximumElementsWidthOfLeft) {
+                this.maximumElementsWidthOfLeft = halfWidth;
+            }
 
-        element.y = relativeY + accumulatedHeight;
+        }
 
-        accumulatedHeight += element.height + OMNI.Graphics.SPACE_Y;
-        
+        // Structures: (0, y) align.
+        else if (element instanceof OMNI.Element.Branch) {
+            element.x = 0;
+
+            if (element.widthOfRight > this.maximumElementsWidthOfRight) {
+                this.maximumElementsWidthOfRight = element.widthOfRight;
+            }
+            if (element.widthOfLeft > this.maximumElementsWidthOfLeft) {
+                this.maximumElementsWidthOfLeft = element.widthOfLeft;
+            }
+        }
+
+        // Align Y-Axis
+
+        element.y = accumulatedHeight;
+
+        accumulatedHeight += element.height + OMNI.Config.Line.SPACING_Y;
+
     };
 
-    this.maximumElementHeight = Math.max(OMNI.Graphics.MIN_LINE_LENGTH, accumulatedHeight);
-    this.height = this.maximumElementHeight;
+    // Update line height
 
-    // 부모 객체 업데이트 (상향 이벤트)
+    this.maximumElementsHeight = Math.max(OMNI.Config.Line.LENGTH_MINIMUM, accumulatedHeight + this.thickness);
+
+    this.height = this.maximumElementsHeight;
+
+    // Update parent element
+
     if (this.parent != undefined) {
         this.parent.update();
     }
 }
 
-/**
- *
- * 트윈 업데이트
- *
- */
-OMNI.Element.Line.prototype.updateTween =  function() {
-    this.tween.to({ x: this.targetX,
-                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
-    this.elementsTween.to({x: this.targetX, y: this.targetY}, 400).easing(OMNI.Graphics.EASING).start();
-    this.lineTween.to({width: this.targetWidth, height: this.targetHeight}, 400).easing(OMNI.Graphics.EASING).start();
+OMNI.Element.Line.prototype.createLineGraphics = function () {
+
+    var lineGraphics = new PIXI.Graphics();
+
+    lineGraphics.beginFill(0);
+    lineGraphics.drawRect(0, 0, 10, 10);
+
+    return lineGraphics;
+}
+
+OMNI.Element.Line.prototype.updateTween = function () {
+
+    if (this.tween) {
+
+        this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+        this.elementsContainerTween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+        this.lineGraphicsTween.to(this.lineTweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+
+    } else {
+
+        this.graphics.x = this.tweenTarget.x;
+        this.graphics.y = this.tweenTarget.y;
+        this.lineGraphics.width = this.lineTweenTarget.width;
+        this.lineGraphics.height = this.lineTweenTarget.height;
+        this.lineGraphics.x = -this.lineTweenTarget.width / 2;
+    }
+
 }
 
 /**
  *
- * 라인에 새 코드 요소를 추가한다.
+ * Add new element to the line.
  *
+ * @param {OMNI.Element} element - The element to add.
  */
-OMNI.Element.Line.prototype.addElement = function(element) {
+OMNI.Element.Line.prototype.addElement = function (element) {
+
+    if (!element) return;
 
     element.parent = this;
 
-    this.elementsContainer.addChild(element.graphics);    
+    this.elementsContainer.addChild(element.graphics);
     this.elements.push(element);
 
     this.update();
@@ -204,10 +330,14 @@ OMNI.Element.Line.prototype.addElement = function(element) {
 
 /**
  *
- * 라인의 특정 위치에 새 코드 요소를 추가한다.
+ * Add new element to specific position of the line.
  *
+ * @param {OMNI.Element} element - The element to add.
+ * @param {int} index
  */
-OMNI.Element.Line.prototype.addElementAt = function(element, index) {
+OMNI.Element.Line.prototype.addElementAt = function (element, index) {
+
+    if (!element) return;
 
     element.parent = this;
 
@@ -219,150 +349,227 @@ OMNI.Element.Line.prototype.addElementAt = function(element, index) {
 
 /**
  *
- * 라인에서 코드 요소를 삭제한다.
+ * Remove the element from the line.
  *
+ * @param {OMNI.Element} element - The element to remove.
  */
-OMNI.Element.Line.prototype.removeElement = function(element) {
+OMNI.Element.Line.prototype.removeElement = function (element) {
+
+    if (!element) return;
 
     var index = this.elements.indexOf(element);
 
-    if (index > -1){
+    if (index > -1) {
         element.parent = null;
 
         this.elementsContainer.removeChild(element.graphics);
         this.elements.splice(index, 1);
 
-        this.update(); 
+        this.update();
     }
 }
 
 /**
  *
- * 라인에서 특정 위치에 있는 코드 요소를 삭제한다.
+ * Remove an element from the line at specific position.
  *
+ * @param {int} index
  */
-OMNI.Element.Line.prototype.removeElementAt = function(index ) {
+OMNI.Element.Line.prototype.removeElementAt = function (index) {
 
-    if (index > -1 && index < this.elements.length){
+    if (index > -1 && index < this.elements.length) {
         this.elements[index].parent = null;
 
         this.elementsContainer.removeChild(this.elements[index].graphics);
         this.elements.splice(index, 1);
 
-        this.update(); 
+        this.update();
     }
 }
 
 /**
  *
- * 라인에 하이라이트 효과를 준다.
+ * Turn on/off highlight effect of the line.
  *
+ * @param {boolean} on - If set to true, turn the highlight on. If set to false, turn the highlight off.
  */
-OMNI.Element.Line.prototype.highlight = function(on) {
+OMNI.Element.Line.prototype.highlight = function (on) {
+
+    OMNI.Config.Line.HIGHLIGHT_FILTER.matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
+
     if (on == true) {
-        this.lineGraphic.filters = [OMNI.Graphics.highlightFilter];
+        this.lineGraphics.filters = [OMNI.Config.Line.HIGHLIGHT_FILTER];
     } else {
-        this.lineGraphic.filters = null;
+        this.lineGraphics.filters = null;
     }
 }
 
 /**
  *
- * 힌트 스팟 추가
+ * Show / Update hintspot at specific position.
  *
+ * @param {int} index
  */
-OMNI.Element.Line.prototype.addHint = function(index) {
+OMNI.Element.Line.prototype.showHintspot = function (index) {
 
-    if (this.hintspot == null) {
-        this.hintspot = new OMNI.Element.HintSpot();
+    var prevIndex = this.elements.indexOf(this.hintspot);
+
+    // If hintspot is already displaying, remove it.
+    if (prevIndex > -1) {
+        this.elements.splice(prevIndex, 1);
     }
-    this.hintspot.radius = this.thickness / 2;
 
-    this.line.addChild(this.hintspot.graphics);
+    var self = this;
+
+    // Add as an element
     this.elements.splice(index, 0, this.hintspot);
 
-    var that = this;
-    this.hintspot.graphics.click = function() {
-        if (OMNI.Shared.mode == 1){
-            that.hintspot.showDirectionBar();
+    // Add to line container, not elements container. (mouse issue)
+    this.hintspot.visible = true;
 
-            that.hintspot.directionBarLeft.click = function() {
-                that.addElementAt(new OMNI.Element.Branch(false), index);
-                that.removeHint();
-            }
-
-            that.hintspot.directionBarRight.click = function() {
-                that.addElementAt(new OMNI.Element.Branch(true), index);
-                that.removeHint();
-            }
-
-        } else if (OMNI.Shared.mode == 2){
-            that.addElementAt(new OMNI.Element.Block(false), index);
-            that.removeHint();
-        } else {
-            that.addElementAt(new OMNI.Element.Block(true), index);
-            that.removeHint();
-        }
+    this.hintspot.graphics.click = function (e) {
         
+        if (OMNI.Shared.mode == 1) {
+            self.hintspot.showDirectionBar();
+
+            self.hintspot.directionBarLeft.click = function () {
+                self.addElementAt(new OMNI.Element.Branch(false), index);
+                self.closeHintspot();
+            }
+
+            self.hintspot.directionBarRight.click = function () {
+                self.addElementAt(new OMNI.Element.Branch(true), index);
+                self.closeHintspot();
+            }
+
+        } else if (OMNI.Shared.mode == 2) {
+            self.addElementAt(new OMNI.Element.Block(), index);
+            self.closeHintspot();
+        }
     }
 
     this.update();
 }
 
-OMNI.Element.Line.prototype.removeHint = function() {
-
-    this._currentHintSpotIndex = -1;
+/**
+ *
+ * Close hintspot.
+ *
+ */
+OMNI.Element.Line.prototype.closeHintspot = function () {
 
     var index = this.elements.indexOf(this.hintspot);
 
     if (index > -1) {
         this.hintspot.closeDirectionBar();
-        this.line.removeChild(this.hintspot.graphics);
+        this.hintspot.visible = false;
         this.elements.splice(index, 1);
+
+        this._currentHintSpotIndex = -1;
+
+        this.update();
     }
-    this.update();
 }
 
-OMNI.Element.Line.prototype.onMouseRollOver = function(event) {
+/**
+ *
+ * Get possible hintspot index by local position.
+ *
+ * @param {number} localX
+ * @param {number} localY
+ * @return {int} index
+ */
+OMNI.Element.Line.prototype.getHintspotIndexByPosition = function (localX, localY) {
 
-    this.onMouseMove(event);
-
-    var that = this;
-    this.line.mousemove = function(e) { that.onMouseMove(e); };
     
-}
+    // If index is not changed in following procedure, index is length of elements.
+    /*var index = this.elements.length;
 
-OMNI.Element.Line.prototype.onMouseRollOut = function(event) {
-    this.line.mousemove = null;
-    this.removeHint();
-}
-
-
-OMNI.Element.Line.prototype.onMouseMove = function(event) {    
-    this._localPoint = event.getLocalPosition(this.line, this._localPoint);
-
-    //console.log(Math.floor(this._localPoint.x) +" / "+ Math.floor(this._localPoint.y));
-    // 마우스가 위치한 인덱스를 찾는다.
-    var accumulatedHeight = 0;
+    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
     var previousHalfHeight = this.thickness;
-    var index = this.elements.length;
 
-    this._localPoint.y -= OMNI.Graphics.SPACE_Y;
+    for (var i = 0; i < this.elements.length; i++) {
 
-   for (var i = 0; i < this.elements.length; i++) {
-        var element = this.elements[i];           
-        if (this._localPoint.y > accumulatedHeight - previousHalfHeight) {
-            previousHalfHeight = element.height / 2;
-            if (this._localPoint.y < accumulatedHeight + OMNI.Graphics.SPACE_Y + previousHalfHeight){
+        var element = this.elements[i];
+
+        if (localY >= accumulatedHeight - OMNI.Config.Line.SPACING_Y - previousHalfHeight) {
+            if (localY < accumulatedHeight + element.height / 2) {
                 index = i;
                 break;
             }
         }
-        accumulatedHeight += element.height + OMNI.Graphics.SPACE_Y;
+           
+        previousHalfHeight = element.height / 2;
+        accumulatedHeight += element.height + OMNI.Config.Line.SPACING_Y;        
     }
-    if (index != this._currentHintSpotIndex) {        
-        this.removeHint();
-        this.addHint(index);
+
+    return index;
+    */
+
+    // If index is not changed in following procedure, index is length of elements.
+    var index = this.elements.length;
+
+    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
+    var previousHalfHeight = this.thickness * 2;
+    var afterHintspot = false;
+
+    for (var i = 0; i < this.elements.length; i++) {
+
+        var element = this.elements[i];
+
+        if (element instanceof OMNI.Element.HintSpot) {
+
+            afterHintspot = true;
+
+            previousHalfHeight += element.height / 2 + OMNI.Config.Line.SPACING_Y;
+
+        } else {
+
+            if (localY >= accumulatedHeight - OMNI.Config.Line.SPACING_Y - previousHalfHeight) {
+                if (localY < accumulatedHeight + element.height / 2) {
+                    index = i;
+                    break;
+                }
+            }
+            
+            previousHalfHeight = element.height / 2;
+        }
+
+        accumulatedHeight += element.height + OMNI.Config.Line.SPACING_Y;        
+    }
+
+    if (afterHintspot) index --;
+
+    return index;
+}
+
+OMNI.Element.Line.prototype.onMouseRollOver = function (event) {
+
+    this.onMouseMove(event);
+
+    var self = this;
+    this.lineGraphicsContainer.mousemove = function (e) {
+        self.onMouseMove(e);
+    };
+
+}
+
+OMNI.Element.Line.prototype.onMouseRollOut = function (event) {
+
+    this.lineGraphicsContainer.mousemove = null;
+
+    this.closeHintspot();
+}
+
+
+OMNI.Element.Line.prototype.onMouseMove = function (event) {
+
+    this._localPosition = event.getLocalPosition(this.lineGraphicsContainer, this._localPosition);
+
+    var index = this.getHintspotIndexByPosition(this._localPosition.x, this._localPosition.y);
+    
+    if (index != this._currentHintSpotIndex) {       
+        this.showHintspot(index);
         this._currentHintSpotIndex = index;
     }
 }

@@ -3,55 +3,70 @@
  * 블록
  *
  */
-OMNI.Element.Block = function(test) {
+OMNI.Element.Block = function () {
 
     // 부모 객체(라인)
     this.parent;
 
-    // 그래픽
-    //this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("block.png"));
+    var size = Math.random() * 60 + 45;
 
-    var size = Math.random() * 60 + 45
+    this.graphics = new PIXI.Graphics();
+    this.graphics.beginFill(Math.random() * 0xFFFFFF);
+    this.graphics.lineStyle(2, 0x000000);
+    this.graphics.drawRect(0, 0, size, size / 4);
 
-    if (test == true){
-        this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("block"));
-    } else {
-        this.graphics = new PIXI.Graphics();
-        this.graphics.beginFill(Math.random() * 0xFFFFFF);
-        this.graphics.lineStyle(2, 0x000000);
-        this.graphics.drawRect(0, 0, size, size/4);
-    }
+    this.graphics.x = -size / 2;
 
     this.graphics.interactive = true;
 
     // 트윈
     this.tween = new TWEEN.Tween(this.graphics);
-
-    this.targetX = 0;
-    this.targetY = 0;
-    this.targetWidth = this.graphics.width;
-    this.targetHeight = this.graphics.height;
+    this.tweenTarget = {
+        x: 0,
+        y: 0,
+        width: this.graphics.width,
+        height: this.graphics.height
+    };
 
 };
 
-// public 메서드
 OMNI.Element.Block.prototype = {
-    
-    get width () { return this.graphics.width; },
-    set width (value) { this.graphics.width = value },
 
-    get height () { return this.graphics.height; },
-    set height (value) { this.graphics.height = value },
+    get width() {
+        return this.tweenTarget.width;
+    },
+    set width(value) {
+        if(this.tweenTarget.width == value) return;
 
-    get x () { return this.targetX; },
-    set x (value) {
-        this.targetX = value;
+        this.tweenTarget.width = value
+    },
+
+    get height() {
+        return this.tweenTarget.height;
+    },
+    set height(value) {
+        if(this.tweenTarget.height == value) return;
+        
+        this.tweenTarget.height = value
+    },
+
+    get x() {
+        return this.tweenTarget.x;
+    },
+    set x(value) {
+        if(this.tweenTarget.x == value) return;
+        
+        this.tweenTarget.x = value;
         this.updateTween();
     },
 
-    get y () { return this.targetY; },
-    set y (value) {
-        this.targetY = value;
+    get y() {
+        return this.tweenTarget.y;
+    },
+    set y(value) {
+        if(this.tweenTarget.y == value) return;
+        
+        this.tweenTarget.y = value;
         this.updateTween();
     }
 
@@ -62,7 +77,7 @@ OMNI.Element.Block.prototype = {
  * 그래픽, 위치 업데이트
  *
  */
-OMNI.Element.Block.prototype.update =  function() {
+OMNI.Element.Block.prototype.update = function () {
     // TODO
 }
 
@@ -71,9 +86,18 @@ OMNI.Element.Block.prototype.update =  function() {
  * 트윈 업데이트
  *
  */
-OMNI.Element.Block.prototype.updateTween =  function() {
-    this.tween.to({ x: this.targetX,
-                    y: this.targetY }, 400).easing(OMNI.Graphics.EASING).start();
+OMNI.Element.Block.prototype.updateTween = function () {
+
+    if (this.tween) {
+        this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+
+    } else {
+
+        this.graphics.x = this.tweenTarget.x;
+        this.graphics.y = this.tweenTarget.y;
+        this.graphics.width = this.tweenTarget.width;
+        this.graphics.height = this.tweenTarget.height;
+    }
 }
 
 /**
@@ -81,6 +105,6 @@ OMNI.Element.Block.prototype.updateTween =  function() {
  * 블록에 하이라이트 효과를 준다.
  *
  */
-OMNI.Element.Block.prototype.highlight =  function(on) {
+OMNI.Element.Block.prototype.highlight = function (on) {
     // TODO
 }
