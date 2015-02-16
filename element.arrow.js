@@ -7,8 +7,14 @@
  */
 OMNI.Element.Arrow = function (direction) {
 
+    var self = this;
+
 	/** Graphics */
 	this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("arrow_horizontal"));
+    this.graphics.interactive = true;
+
+    /** Helping Line */
+    this.helpingLine;
 
 	/** Tween */
 	this.tween = new TWEEN.Tween(this.graphics);
@@ -16,6 +22,17 @@ OMNI.Element.Arrow = function (direction) {
 
 	// set direction
 	this.direction = direction;
+
+    this.graphics.mouseover = function (e) {
+        if (self.helpingLine) {
+            self.helpingLine.highlight(true);
+        }
+    }
+    this.graphics.mouseout = function (e) {
+        if (self.helpingLine) {
+            self.helpingLine.highlight(false);
+        }
+    }
 	
 }
 
@@ -93,11 +110,11 @@ OMNI.Element.Arrow.prototype.updateTween = function(){
  */
 OMNI.Element.Arrow.prototype.highlight = function (on) {
 
-    OMNI.Config.Line.HIGHLIGHT_FILTER.matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
+    OMNI.Config.Line.HIGHLIGHT_FILTER[0].matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
 
     if (on == true) {
-        this.graphics.filters = [OMNI.Config.Line.HIGHLIGHT_FILTER];
+        this.graphics.filters = OMNI.Config.Line.HIGHLIGHT_FILTER;
     } else {
-        this.graphics.filters = null;
+        this.graphics.filters = null;        
     }
 }

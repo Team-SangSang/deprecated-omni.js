@@ -13,7 +13,7 @@ OMNI.Config.Line = {
         0, 1, 0, 0.5,
         0, 0, 1, 0.5,
         0, 0, 0, 1],
-    HIGHLIGHT_FILTER: new PIXI.ColorMatrixFilter(),
+    HIGHLIGHT_FILTER: [new PIXI.ColorMatrixFilter()],
 
     THICKNESS_MINIMUM: 7,
     THICKNESS_MAXIMUM: 40,
@@ -56,7 +56,9 @@ OMNI.Element.Line = function () {
     this.lineGraphics.width = OMNI.Config.Line.THICKNESS_MINIMUM;
     this.lineGraphics.height = OMNI.Config.Line.LENGTH_MINIMUM;
     this._thickness = OMNI.Config.Line.THICKNESS_MINIMUM;
-    this.synchronizedThickness = 0;
+
+    /** connected helper lines */
+    this.helperLines = [];
 
     /** Children elements */
     this.elements = [];
@@ -287,11 +289,36 @@ OMNI.Element.Line.prototype.updateTween = function () {
 
 /**
  *
+ * Set helper lines such as HelperLine or Arrow
+ *
+ * @param {Array} helperLines
+ */
+OMNI.Element.Line.prototype.setHelperLines = function (helperLines) {    
+
+    this.helperLines = [];
+
+    for (var i = 0; i < helperLines.length; i++) {
+
+        var helperLine = helperLines[i];
+
+        if (helperLine instanceof OMNI.Element.HelperLine || helperLine instanceof OMNI.Element.Arrow) {
+            this.helperLines.push(helperLine);
+            helperLine.helpingLine = this;
+        }
+    }
+}
+
+/**
+ *
  * Sync thickness of self and children else lines.
  *
  * @param {OMNI.Element} element - The element to add.
  */
 OMNI.Element.Line.prototype.syncThickness = function (thickness) {
+
+    if (thickness > OMNI.Config.Line.THICKNESS_MAXIMUM) {
+        thickness = OMNI.Config.Line.THICKNESS_MAXIMUM;
+    }
 
     this.lineTweenTarget.width = thickness;
     this.lineTweenTarget.x = - thickness / 2;
@@ -399,12 +426,18 @@ OMNI.Element.Line.prototype.removeElementAt = function (index) {
  */
 OMNI.Element.Line.prototype.highlight = function (on) {
 
-    OMNI.Config.Line.HIGHLIGHT_FILTER.matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
+    OMNI.Config.Line.HIGHLIGHT_FILTER[0].matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
 
     if (on == true) {
-        this.lineGraphics.filters = [OMNI.Config.Line.HIGHLIGHT_FILTER];
+        this.lineGraphics.filters = OMNI.Config.Line.HIGHLIGHT_FILTER;
     } else {
-        this.lineGraphics.filters = null;
+        this.lineGraphics.filters = null;        
+    }
+
+    // Highlight related lines
+
+    for (var i = 0; i < this.helperLines.length; i++) {
+        this.helperLines[i].highlight(on);
     }
 }
 
@@ -484,32 +517,7 @@ OMNI.Element.Line.prototype.closeHintspot = function () {
  * @return {int} index
  */
 OMNI.Element.Line.prototype.getHintspotIndexByPosition = function (localX, localY) {
-
-    
-    // If index is not changed in following procedure, index is length of elements.
-    /*var index = this.elements.length;
-
-    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
-    var previousHalfHeight = this.thickness;
-
-    for (var i = 0; i < this.elements.length; i++) {
-
-        var element = this.elements[i];
-
-        if (localY >= accumulatedHeight - OMNI.Config.Line.SPACING_Y - previousHalfHeight) {
-            if (localY < accumulatedHeight + element.height / 2) {
-                index = i;
-                break;
-            }
-        }
-           
-        previousHalfHeight = element.height / 2;
-        accumulatedHeight += element.height + OMNI.Config.Line.SPACING_Y;        
-    }
-
-    return index;
-    */
-
+  
     // If index is not changed in following procedure, index is length of elements.
     var index = this.elements.length;
 
@@ -549,9 +557,12 @@ OMNI.Element.Line.prototype.getHintspotIndexByPosition = function (localX, local
 
 OMNI.Element.Line.prototype.onMouseRollOver = function (event) {
 
+    this.highlight(true);
+
     this.onMouseMove(event);
 
     var self = this;
+
     this.lineGraphicsContainer.mousemove = function (e) {
         self.onMouseMove(e);
     };
@@ -559,6 +570,8 @@ OMNI.Element.Line.prototype.onMouseRollOver = function (event) {
 }
 
 OMNI.Element.Line.prototype.onMouseRollOut = function (event) {
+
+    this.highlight(false);
 
     this.lineGraphicsContainer.mousemove = null;
 

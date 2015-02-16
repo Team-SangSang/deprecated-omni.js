@@ -58,8 +58,8 @@ OMNI.Element.Branch = function (orientation) {
 
     this.elseContainer.addChild(this.elseLine.graphics);
 
-    this.graphics.addChild(this.ifContainer);
     this.graphics.addChild(this.elseContainer);
+    this.graphics.addChild(this.ifContainer);
     this.graphics.addChild(this.ifLine.elementsContainer);
     this.graphics.addChild(this.elseLine.elementsContainer);
     this.graphics.addChild(this.entry.graphics);
@@ -69,18 +69,8 @@ OMNI.Element.Branch = function (orientation) {
     this.ifContainer.interactive = true;
     this.elseContainer.interactive = true;
 
-    this.ifContainer.mouseover = function (eventData) {
-        self.highlightIf(true);
-    };
-    this.ifContainer.mouseout = function (eventData) {
-        self.highlightIf(false);
-    };
-    this.elseContainer.mouseover = function (eventData) {
-        self.highlightElse(true);
-    };
-    this.elseContainer.mouseout = function (eventData) {
-        self.highlightElse(false);
-    };
+    this.ifLine.setHelperLines([this.horizontal_top, this.horizontal_bottom, this.arrow]);
+
     this.entry.mouseover = function (eventData) {
         self.highlightEntry(true);
     };
@@ -277,39 +267,4 @@ OMNI.Element.Branch.prototype.highlightEntry = function (on) {
     } else {
         this.entry.highlight(false);
     }
-}
-
-
-/**
- *
- * if라인에 하이라이트 효과를 준다.
- *
- */
-OMNI.Element.Branch.prototype.highlightIf = function (on) {
-    if (on) {
-        this.ifLine.highlight(true);
-        this.horizontal_top.highlight(true);
-        this.horizontal_bottom.highlight(true);
-        this.arrow.highlight(true);
-    } else {
-        this.ifLine.highlight(false);
-        this.horizontal_top.highlight(false);
-        this.horizontal_bottom.highlight(false);
-        this.arrow.highlight(false);
-    }
-}
-
-/**
- *
- * else라인에 하이라이트 효과를 준다.
- *
- */
-OMNI.Element.Branch.prototype.highlightElse = function (on) {
-
-    if (on) {
-        this.elseLine.highlight(true);
-    } else {
-        this.elseLine.highlight(false);
-    }
-
 }

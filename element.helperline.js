@@ -9,6 +9,8 @@
  */
 OMNI.Element.HelperLine = function (orientation) {
 
+    var self = this;
+
     /** Parent element */
     this.parent;
 
@@ -18,6 +20,9 @@ OMNI.Element.HelperLine = function (orientation) {
     /** Graphics */
     this.graphics = this.createLineGraphics();
     this.graphics.interactive = true;
+
+    /** Helping line */
+    this.helpingLine;
 
     // Set initial thickness
     this._thickness = OMNI.Config.Line.THICKNESS_MINIMUM;
@@ -37,6 +42,17 @@ OMNI.Element.HelperLine = function (orientation) {
     } else {
         this.tweenTarget.width = OMNI.Config.Line.LENGTH_MINIMUM;
         this.tweenTarget.height = this.thickness;
+    }
+
+    this.graphics.mouseover = function (e) {
+        if (self.helpingLine) {
+            self.helpingLine.highlight(true);
+        }
+    }
+    this.graphics.mouseout = function (e) {
+        if (self.helpingLine) {
+            self.helpingLine.highlight(false);
+        }
     }
 
     this.updateTween();
@@ -131,11 +147,11 @@ OMNI.Element.HelperLine.prototype.createLineGraphics = function () {
  */
 OMNI.Element.HelperLine.prototype.highlight = function (on) {
 
-    OMNI.Config.Line.HIGHLIGHT_FILTER.matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
+    OMNI.Config.Line.HIGHLIGHT_FILTER[0].matrix = OMNI.Config.Line.HIGHLIGHT_MATRIX;
 
     if (on == true) {
-        this.graphics.filters = [OMNI.Config.Line.HIGHLIGHT_FILTER];
+        this.graphics.filters = OMNI.Config.Line.HIGHLIGHT_FILTER;
     } else {
-        this.graphics.filters = null;
+        this.graphics.filters = null;        
     }
 }
