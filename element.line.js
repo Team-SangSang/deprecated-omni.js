@@ -17,7 +17,8 @@ OMNI.Config.Line = {
 
     THICKNESS_MINIMUM: 7,
     THICKNESS_MAXIMUM: 40,
-    THICKNESS_INCREMENT: 1.5
+    THICKNESS_INCREMENT: 1.5,
+    THICKNESS_INCREMENT_OVERLAP: 0.2
 }
 
 /**
@@ -55,7 +56,7 @@ OMNI.Element.Line = function () {
     this.lineGraphics.width = OMNI.Config.Line.THICKNESS_MINIMUM;
     this.lineGraphics.height = OMNI.Config.Line.LENGTH_MINIMUM;
     this._thickness = OMNI.Config.Line.THICKNESS_MINIMUM;
-    this._thicknessSync = 0;
+    this.synchronizedThickness = 0;
 
     /** Children elements */
     this.elements = [];
@@ -161,27 +162,12 @@ OMNI.Element.Line.prototype = {
     },
     set thickness(value) {
 
-        if (this.lineTweenTarget.width == value) return;
-
         this._thickness = value;
-        this.hintspot.radius = value / 2;
 
-        if (this._thicknessSync > value) return;
-
-        this.lineTweenTarget.width = value;
-        this.lineTweenTarget.x = -value / 2;
-
-        this.updateTween();
-    },
-    set thicknessSync(value) {
-        this._thicknessSync = value;
-
-        this.lineTweenTarget.width = value;
-        this.lineTweenTarget.x = -value / 2;
-
-        this.updateTween();
+        if (!this.parent) {
+            this.syncThickness(value); 
+        }
     }
-
 }
 
 /**
@@ -205,20 +191,9 @@ OMNI.Element.Line.prototype.update = function () {
             }
         }
     }
+
     this.thickness = maximumThickness + OMNI.Config.Line.THICKNESS_INCREMENT;
-
-    // Update child else line
-
-    for (var i in this.elements) {
-
-        var element = this.elements[i];
-        
-        if (element instanceof OMNI.Element.Branch) {
-            element.elseLine.thicknessSync = this.thickness + 0.4;
-        }
-    }
-
-
+    
     // Align child elements.
 
     this.maximumElementsWidthOfRight = 0;
@@ -308,6 +283,35 @@ OMNI.Element.Line.prototype.updateTween = function () {
         this.lineGraphics.x = -this.lineTweenTarget.width / 2;
     }
 
+}
+
+/**
+ *
+ * Sync thickness of self and children else lines.
+ *
+ * @param {OMNI.Element} element - The element to add.
+ */
+OMNI.Element.Line.prototype.syncThickness = function (thickness) {
+
+    this.lineTweenTarget.width = thickness;
+    this.lineTweenTarget.x = - thickness / 2;
+
+    this.hintspot.radius = thickness / 2;
+
+    // Update child else line
+
+    for (var i in this.elements) {
+
+        var element = this.elements[i];
+
+        if (element instanceof OMNI.Element.Branch) {
+
+            element.elseLine.syncThickness(thickness + OMNI.Config.Line.THICKNESS_INCREMENT_OVERLAP);
+            element.ifLine.syncThickness(element.ifLine.thickness);
+        }
+    }
+
+    this.updateTween();
 }
 
 /**
