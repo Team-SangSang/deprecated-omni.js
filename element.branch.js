@@ -177,7 +177,7 @@ OMNI.Element.Branch.prototype.update = function () {
 
     var maximumLineHeight = Math.max(this.ifLine.elementsHeight, this.elseLine.elementsHeight);
 
-    this.ifLine.height = maximumLineHeight;
+    this.ifLine.height = maximumLineHeight  + this.thickness * 2;
     this.elseLine.height = maximumLineHeight  + this.thickness;
 
     // Horizontal width determination.
@@ -200,14 +200,14 @@ OMNI.Element.Branch.prototype.update = function () {
     // Right
     if (this.orientation == true) {
 
-        this.horizontal_top.x = 0;
+        this.horizontal_top.x = - this.thickness / 2;
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
 
         this.horizontal_bottom.x = this.horizontal_top.x;
         this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + this.thickness;
 
         this.ifLine.x = maximumLineWidth - this.thickness / 2;
-        this.ifLine.y = this.horizontal_top.y + this.thickness;
+        this.ifLine.y = this.horizontal_top.y;
 
         this.elseLine.x = 0;
         this.elseLine.y = this.ifLine.y;
@@ -218,14 +218,14 @@ OMNI.Element.Branch.prototype.update = function () {
     // Left
     else {
 
-        this.horizontal_top.x = - this.horizontal_top.width;
+        this.horizontal_top.x = - this.horizontal_top.width + this.thickness / 2;
         this.horizontal_top.y = (this.entry.height - this.horizontal_top.height) / 2;
 
         this.horizontal_bottom.x = this.horizontal_top.x;
         this.horizontal_bottom.y = this.horizontal_top.y + maximumLineHeight + this.thickness;
 
         this.ifLine.x = - maximumLineWidth + this.thickness / 2;;
-        this.ifLine.y = this.horizontal_top.y + this.thickness;
+        this.ifLine.y = this.horizontal_top.y;
 
         this.elseLine.x = 0;
         this.elseLine.y = this.ifLine.y;
