@@ -84,11 +84,6 @@ OMNI.Element.Line = function () {
 
     this.lineGraphicsContainer.interactive = true;
 
-    if(OMNI.Shared.CC == undefined) {
-        this.csc = true;
-        OMNI.Shared.CC = 1;
-    }
-
     this.lineGraphicsContainer.mouseover = function (e) {
         
         if (OMNI.Shared.currentOccupied) {

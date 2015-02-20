@@ -12,6 +12,7 @@ OMNI.Element.Arrow = function (direction) {
 	/** Graphics */
 	this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame("arrow_horizontal"));
     this.graphics.interactive = true;
+    this.graphics.pivot = new PIXI.Point(0, this.graphics.height / 2);
 
     /** Helping Line */
     this.helpingLine;
@@ -81,7 +82,8 @@ OMNI.Element.Arrow.prototype = {
 			this.graphics.rotation = - Math.PI / 2;
 			break;			
 		case 4: // Right
-			this.graphics.scale = new PIXI.Point(-1,1);
+            this.graphics.rotation = - Math.PI;
+			//this.graphics.scale = new PIXI.Point(-1,1);
 			break;		
 		default: // Left	
 		}

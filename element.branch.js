@@ -212,7 +212,7 @@ OMNI.Element.Branch.prototype.update = function () {
         this.elseLine.x = 0;
         this.elseLine.y = this.ifLine.y;
 
-        this.arrow.y = this.horizontal_bottom.y - this.arrow.height / 2 + this.thickness / 2;
+        this.arrow.y = this.horizontal_bottom.y + this.thickness / 2;
     }
 
     // Left
@@ -230,7 +230,7 @@ OMNI.Element.Branch.prototype.update = function () {
         this.elseLine.x = 0;
         this.elseLine.y = this.ifLine.y;
 
-        this.arrow.y = this.horizontal_bottom.y - this.arrow.height / 2 + this.thickness / 2;
+        this.arrow.y = this.horizontal_bottom.y + this.thickness / 2;
     }
 
     this.targetHeight = maximumLineHeight + this.entry.height / 2 + this.thickness + OMNI.Config.Line.SPACING_Y + 10;
