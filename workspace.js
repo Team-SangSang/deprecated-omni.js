@@ -69,11 +69,6 @@ OMNI.Workspace = function(width, height) {
 
     // Load resources. All works are suspended until loading is completed.
     loadGraphicsResources(function(){
-        var proc = self.addProcedure();
-        self.addBlock(proc);
-        self.addBlock(proc);
-        var proc2 = self.addBranch(proc, true);
-        self.addBlock(proc);
     });
   
     function loadGraphicsResources(onLoad) {

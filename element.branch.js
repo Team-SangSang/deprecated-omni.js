@@ -178,7 +178,7 @@ OMNI.Element.Branch.prototype.update = function () {
     var maximumLineHeight = Math.max(this.ifLine.elementsHeight, this.elseLine.elementsHeight);
 
     this.ifLine.height = maximumLineHeight  + this.thickness * 2;
-    this.elseLine.height = maximumLineHeight  + this.thickness;
+    this.elseLine.height = maximumLineHeight  + this.thickness * 2 - this.entry.height / 2;
 
     // Horizontal width determination.
 
@@ -210,7 +210,7 @@ OMNI.Element.Branch.prototype.update = function () {
         this.ifLine.y = this.horizontal_top.y;
 
         this.elseLine.x = 0;
-        this.elseLine.y = this.ifLine.y;
+        this.elseLine.y = this.entry.y + this.entry.height / 2;
 
         this.arrow.y = this.horizontal_bottom.y + this.thickness / 2;
     }
@@ -228,12 +228,12 @@ OMNI.Element.Branch.prototype.update = function () {
         this.ifLine.y = this.horizontal_top.y;
 
         this.elseLine.x = 0;
-        this.elseLine.y = this.ifLine.y;
+        this.elseLine.y = this.entry.y + this.entry.height / 2;
 
         this.arrow.y = this.horizontal_bottom.y + this.thickness / 2;
     }
 
-    this.targetHeight = maximumLineHeight + this.entry.height / 2 + this.thickness + OMNI.Config.Line.SPACING_Y + 10;
+    this.targetHeight = maximumLineHeight + this.entry.height / 2 + this.thickness + OMNI.Config.Line.SPACING_Y;
 
     // Update parent line
 

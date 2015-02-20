@@ -196,7 +196,7 @@ OMNI.Element.Line.prototype.update = function () {
     this.maximumElementsWidthOfRight = 0;
     this.maximumElementsWidthOfLeft = 0;
 
-    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
+    var accumulatedHeight = this.thickness * 2 + OMNI.Config.Line.SPACING_Y;
 
     for (var i in this.elements) {
 
@@ -516,8 +516,8 @@ OMNI.Element.Line.prototype.getHintspotIndexByPosition = function (localX, local
     // If index is not changed in following procedure, index is length of elements.
     var index = this.elements.length;
 
-    var accumulatedHeight = this.thickness + OMNI.Config.Line.SPACING_Y;
-    var previousHalfHeight = this.thickness * 2;
+    var accumulatedHeight = this.thickness * 2 + OMNI.Config.Line.SPACING_Y;
+    var previousHalfHeight = 100000;
     var afterHintspot = false;
 
     for (var i = 0; i < this.elements.length; i++) {
