@@ -2,12 +2,15 @@
 
 var OMNI = {};
 OMNI.Element = {};
+OMNI.Code = {};
+OMNI.Block = {};
 OMNI.Config = {};
 
-
-
 OMNI.Shared = {
-    mode: 2
+    mode: 2,
+    integer:0xD02090,
+    string:0x1C86EE,
+    void:0xEEC900
 }
 
 OMNI.Config.Tween = {
@@ -32,6 +35,8 @@ OMNI.Config.Workspace = {
     BACKGROUND_COLOR: 0xDDDDDD
 }
 
+
+
 /**
  *
  * Every job releated to omni.js is done on workspace. Workspace consists of procedures and
@@ -45,7 +50,6 @@ OMNI.Config.Workspace = {
 OMNI.Workspace = function(width, height) {
     
     var self = this;
-
     width = width || OMNI.Config.Workspace.DEFAULT_WIDTH;
     height = height || OMNI.Config.Workspace.DEFAULT_HEIGHT;
 
@@ -61,6 +65,9 @@ OMNI.Workspace = function(width, height) {
     /** Procedures */
     this.procedures = [];
 
+    /** 스테이지에 있는 블록들의 목록입니다. */
+    this.blocks = [];
+
     // Initialize layers    
     for (var i = 0; i < 3; i++) {
         this.layer[i] = new PIXI.DisplayObjectContainer();
@@ -69,6 +76,24 @@ OMNI.Workspace = function(width, height) {
 
     // Load resources. All works are suspended until loading is completed.
     loadGraphicsResources(function(){
+        self.addBlock("test_long_name_block 한글지원", "string", [{
+                    name: "인티저 입려크",
+                    type: "integer",
+                    desciption: "afasfasf" }, { 
+
+                    name: "스트링 입력",
+                    type: "string",
+                    description: "test parameter~~!" }]);
+
+        self.addBlock("숏네임 블로크", "integer", [{
+                    name: "스트으링 입려크",
+                    type: "integer",
+                    desciption: "afasfasf" }, { 
+
+                    name: "인티저어 입력",
+                    type: "string",
+                    description: "test parameter~~!" }]);
+
     });
   
     function loadGraphicsResources(onLoad) {
@@ -125,24 +150,73 @@ OMNI.Workspace.prototype.update = function() {
  *
  * @param {OMNI.Procedure} - Procedure block is being added.
  */
-OMNI.Workspace.prototype.addBlock = function(procedure) {
-    var block = new OMNI.Element.Block();
-    procedure.line.addElement(block);
+OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
+        
+    var self = this;
 
-    return block;
+    var block = new OMNI.Block.Entity(a,b,c,d);
+    
+    block.x = Math.random() * 500 + 100;
+    block.y = Math.random() * 500;
+
+    block.onFocus = function(target) {
+        self.layer[1].removeChild(target.graphics);
+        self.layer[1].addChild(target.graphics);
+    }
+
+    block.onDrag = function(target) {
+
+        // 이 블록의 터미널과 다른 모든 블록의 파라미터와의 hitTest 검사를 시행합니다.
+
+        for(var i = 0; i < self.blocks.length; i++) {
+            var block = self.blocks[i];
+
+            for(var j = 0; j < block.parameters.length; j++) {
+                var parameter = block.parameters[j];
+
+                if (self._hitTest(parameter.graphics, target.body.terminal)) {
+                    console.log(parameter.name)
+
+                    /*
+                    
+
+                    일단 부딛히면 -> 고정
+
+                    
+                    */
+
+                    // 루틴 종료
+                    return;
+                }
+            }
+        }
+    }
+
+    this.blocks.push(block);
+    this.layer[1].addChild(block.graphics);
 }
 
 /**
+ * 두 그래픽 요소 간의 충돌 여부를 Global 레벨에서 검사합니다.
  *
- * Add test branch to procedure.
- *
- * @param {OMNI.Procedure} - Procedure branch is being added.
  */
-OMNI.Workspace.prototype.addBranch = function(procedure, flipped) {
-    var branch = new OMNI.Element.Branch(flipped);
-    procedure.line.addElement(branch);
+OMNI.Workspace.prototype._hitTest = function(o1, o2) {
 
-    return branch;
+    if(!this._worldOriginPoint) { this._worldOriginPoint = new PIXI.Point(0, 0); }
+
+    var p1 = o1.toGlobal(this._worldOriginPoint);
+    var p2 = o2.toGlobal(this._worldOriginPoint);
+
+    if (p1.x + o1.width > p2.x) {
+        if (p1.x < p2.x + o2.width) {
+           if (p1.y + o1.height > p2.y) {
+                if (p1.y < p2.y + o2.height) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 /**
