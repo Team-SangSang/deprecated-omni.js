@@ -68,6 +68,18 @@ OMNI.Block.Body.prototype = {
         this.update();
     },
 
+    /** 터미널의 가로 길이 */
+   	get terminalWidth() {
+        return this.terminal.width;
+    },
+    set terminalWidth(value) { 
+
+        this.terminal.width = value;
+        
+        // 업데이트
+        this.update();
+    },
+
     /** 블록의 x 좌표 */
     get x() {
         return this.graphics.x;
@@ -122,10 +134,9 @@ OMNI.Block.Body.prototype = {
  */
 OMNI.Block.Body.prototype.update = function () {
 
-	// 터미널의 크기를 블록의 일정 비율로 조정한 뒤 중앙 정렬합니다.
+	// 터미널을 중앙 정렬합니다.
 
-	this.terminal.width = this.box.width * OMNI.Config.Block.TERMINAL_TO_BLOCK_RATIO;
-	this.terminal.x = this.box.width * (1 - OMNI.Config.Block.TERMINAL_TO_BLOCK_RATIO) / 2;
+	this.terminal.x = (this.box.width - this.terminal.width) / 2;
 	this.terminal.y = this.box.height - 1;
 
 	// 텍스트를 중앙 하단으로 정렬합니다.

@@ -26,10 +26,10 @@ OMNI.Block.Parameter = function (name, dataType, options) {
 	this._necessary = (options ? options.necessary : false) || false;
 
 	/** 이 파라미터가 속한 부모 블록 */
-    this.parentBlock;
+    this.block;
 
     /** 이 파라미터와 연결되어 있는 블록 */
-	this.connectedBlock;
+	this.connection;
 
 	/** 그래픽스 */
 	this.graphics = new PIXI.DisplayObjectContainer();

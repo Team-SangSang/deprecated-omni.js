@@ -76,6 +76,16 @@ OMNI.Workspace = function(width, height) {
 
     // Load resources. All works are suspended until loading is completed.
     loadGraphicsResources(function(){
+
+        for (var i = 0; i < 10; i++) {
+            self.addBlock("test_block_" + i, "string", [{
+                    name: "Integer",
+                    type: "integer"}, { 
+
+                    name: "String",
+                    type: "string"}]);
+        }
+
         self.addBlock("test_long_name_block 한글지원", "string", [{
                     name: "인티저 입려크",
                     type: "integer",
@@ -166,6 +176,12 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
 
     block.onDrag = function(target) {
 
+        // 타겟에 이미 연결된 블록이 있었다면 연결 해제
+
+        if (target.connection) {
+            target.undock();
+        }
+
         // 이 블록의 터미널과 다른 모든 블록의 파라미터와의 hitTest 검사를 시행합니다.
 
         for(var i = 0; i < self.blocks.length; i++) {
@@ -175,15 +191,16 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
                 var parameter = block.parameters[j];
 
                 if (self._hitTest(parameter.graphics, target.body.terminal)) {
-                    console.log(parameter.name)
+                   // console.log(parameter.name)
 
-                    /*
-                    
-
-                    일단 부딛히면 -> 고정
-
-                    
+                    /* 
+                    일단 부딛히면 -> 고정                    
                     */
+                    
+                    target.dock(parameter);
+
+
+
 
                     // 루틴 종료
                     return;

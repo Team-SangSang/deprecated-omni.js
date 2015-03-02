@@ -4,7 +4,7 @@ OMNI.Config.Block = {
 
 	BLOCK_HEIGHT: 25,
 	BLOCK_MIN_WIDTH: 30,
-	BLOCK_WIDTH_PADDING: 5,
+	BLOCK_WIDTH_PADDING: 9,
 	BLOCK_FONT: {font: "bold 12px Arial", fill: "#000000"},
 
 	TERMINAL_HEIGHT: 12,
@@ -19,7 +19,7 @@ OMNI.Config.Block = {
 
 	// 인접한 블록 사이의 최소 여백
 
-	SPACE_ADJACENT_BLOCK: 5,
+	SPACE_ADJACENT_BLOCK: 7,
 
 	// 블록 드래그 이벤트 호출 Interval
 
@@ -72,12 +72,8 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 
 	if (parameters) {
 		for (var i = 0; i < parameters.length; i++) {
-
 			var parameterData = parameters[i];
-			var parameter = new OMNI.Block.Parameter(parameterData.name, parameterData.type);
-
-			this.parameters.push(parameter);
-			this.container.addChild(parameter.graphics);
+			this.addParameter(new OMNI.Block.Parameter(parameterData.name, parameterData.type));
 		}
 	}
 
@@ -114,6 +110,26 @@ OMNI.Block.Entity.prototype = {
         this.graphics.y = value;
     },
 
+    /** 왼쪽 돌출부 */
+    get leftProminent() {
+    	return this._leftProminent;
+    },
+
+     /** 오른족 돌출부 */
+    get rightProminent() {
+    	return this._rightProminent;
+    },
+
+    /** 블록의 가로 길이 */
+    get width() {
+    	return this.graphics.width;
+    },
+
+    /** 블록의 세로 길이 */
+    get height() {
+    	return this.graphics.height;
+    },
+
     /** 블록 이름 */
     get name() {
         return this._name;
@@ -144,52 +160,234 @@ OMNI.Block.Entity.prototype = {
  * 블록 간의 연결 상태를 반영하여 블록 내부 요소의 크기를 새로 조정합니다.
  *
  */
-OMNI.Block.Entity.prototype.update = function () {
+// direction에는 up(0) 과 down(1) 이 있음.
+OMNI.Block.Entity.prototype.update = function (ascending) {
 	
-	// 파라미터 정렬
+	// up : 위치 업데이트
+	if(ascending) {
+		this._updatePosition();
+	} 
 
-	var widthAccumulation = this._updateParametersPosition(OMNI.Config.Block.SPACE_ADJACENT_BLOCK);
+	// down : 크기 업데이트
+	else {
 
-	// 블록 크기 설정
+		this._updateSize();		
 
-	this.body.width = widthAccumulation;
-	this.body.height = OMNI.Config.Block.BLOCK_HEIGHT;
+		// 하향 업데이트
+		if (this.connection) {
+			this.connection.block.update(false);
+			return;
+		}
 
+	}
+
+	// 바닥까지 도달했거나 상향 업데이트 중이면 상향 업데이트
+	for (var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];
+		if (parameter.connection) {
+			parameter.connection.update(true);
+		}
+	}
+
+
+}
+
+
+/**
+ * 이 블록에 연결된 상위 블록의 파라미터와 위치를 일치시킵니다.
+ * 주의: 이 구문은 파라미터 클래스의 구조에 민감합니다. 포함 관계가 변경되면 반드시 아래 코드도 수정되어야 함.
+ */
+OMNI.Block.Entity.prototype._updatePosition = function () {
+
+	if (this.connection) {
+
+		var root = this.connection.graphics.parent ? (this.connection.graphics.parent.parent ?  this.connection.graphics.parent.parent : null) : null;
+
+		if (root) {
+
+			this.x = root.x + this.connection.x + (this.connection.width - root.width) / 2;
+			this.y = root.y - this.height;
+
+		}
+	}
+}
+
+OMNI.Block.Entity.prototype._updateSize = function () {
+
+	var blockWidthInfo = this._updateParameters(OMNI.Config.Block.SPACE_ADJACENT_BLOCK);
+
+	this.body.width = blockWidthInfo[1];
+
+	this._leftProminent = blockWidthInfo[0];
+	this._rightProminent = blockWidthInfo[2];
+
+	this._updateTerminal();
+
+	this.body.height = OMNI.Config.Block.BLOCK_HEIGHT;	
 	if (this.parameters.length > 0) { this.body.height += OMNI.Config.Block.PARAMETER_HEIGHT; }
 
 	// 블록 이름이 길다거나 하는 이유로 여백이 남으면 파라미터 간격을 조정합니다.
 
-	var gap = this.body.width - widthAccumulation;
+	var gap = this.body.width - blockWidthInfo[1];
 
 	if (gap > 0 && this.parameters.length > 0) {
 
-		var gapDiv = (gap + OMNI.Config.Block.SPACE_ADJACENT_BLOCK * (this.parameters.length - 1)) / (this.parameters.length + 1);
+		var extendedSpace = (gap + OMNI.Config.Block.SPACE_ADJACENT_BLOCK * (this.parameters.length - 1)) / (this.parameters.length + 1);
 
-		this._updateParametersPosition(gapDiv);
+		this._updateParameters(extendedSpace);
 	}
 
-	this.container.x = - Math.floor(this.body.width / 2);
+	this.container.x = - Math.floor(this.body.width / 2);	
 }
 
-OMNI.Block.Entity.prototype._updateParametersPosition = function (space) {
+/**
+ * 파라미터에 연결된 블록들을 업데이트하고, 블록들의 크기를 반영하여 파라미터를 정렬합니다.
+ *
+ * @param {int} space - 파라미터 간 최소 간격입니다.
+ * @return {Array} - [좌측으로 튀어나온 파라미터 길이, 실제 총 길이, 우측으로 튀어나온 파라미터 길이]
+ */
+OMNI.Block.Entity.prototype._updateParameters = function (space) {
 
-	// 파라미터에 연결된 블록이 있다면 그 너비를 고려하여 파라미터의 위치를 정합니다. 
+	var widthAccumulation = OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
-	var widthAccumulation = space;
+	var leftProminent = 0;
+	var rightProminent = 0;
 
 	for (var i = 0; i < this.parameters.length; i++) {
 
 		var parameter = this.parameters[i];
-		var boundaryWidth = Math.max(parameter.connectedBlock ? parameter.connectedBlock.width : 0 , parameter.width);
+		var parameterWidth;
 
-		parameter.x = widthAccumulation + (boundaryWidth - parameter.width) / 2;
+		if (parameter.connection) {
 
-		widthAccumulation += boundaryWidth + space;
+			if (i < 1) {
+				
+				parameterWidth = (parameter.connection.width + parameter.width) / 2 + parameter.connection.rightProminent;
+				leftProminent = (parameter.connection.width - parameter.width) / 2 + parameter.connection.leftProminent;
+				leftProminent -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
+				parameter.x = widthAccumulation;
+
+			} else if (i > this.parameters.length - 2) {
+
+				parameterWidth = (parameter.connection.width + parameter.width) / 2 + parameter.connection.leftProminent;
+				rightProminent = (parameter.connection.width - parameter.width) / 2 + parameter.connection.rightProminent;
+				rightProminent -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
+
+				parameter.x = widthAccumulation + parameterWidth - parameter.width;
+
+			} else {
+
+				parameterWidth = parameter.connection.leftProminent + parameter.connection.width + parameter.connection.rightProminent;
+				parameter.x = widthAccumulation + (parameterWidth - parameter.width) / 2;
+
+			}
+
+			parameter.connection._updateTerminal();
+		}
+
+		else {
+
+			parameterWidth = parameter.width;
+			parameter.x = widthAccumulation;
+
+		}
+
+		widthAccumulation += parameterWidth + space;
 	}
 
-	return widthAccumulation;
+	var centerWidth = widthAccumulation - space + OMNI.Config.Block.BLOCK_WIDTH_PADDING;
+
+	return [leftProminent, centerWidth, rightProminent];
 }
+
+/**
+ * 이 블록의 터미널의 크기와 위치를 업데이트합니다.
+ */
+OMNI.Block.Entity.prototype._updateTerminal = function () {
+
+	if (this.connection) {
+
+		this.body.terminalWidth = this.connection.width;
+
+	} else {
+
+		this.body.terminalWidth = this.body.width * OMNI.Config.Block.TERMINAL_TO_BLOCK_RATIO;
+
+	}
+}
+
+
+/**
+ * 블록을 특정 파라미터에 연결합니다.
+ *
+ * @param {OMNI.Block.Parameter} parameter - 이 블록과 연결된 파라미터
+ */
+OMNI.Block.Entity.prototype.dock = function (parameter) {
+
+	this.connection = parameter;
+	parameter.connection = this;
+	
+	this.update();
+}
+
+
+/**
+ * 블록에 연결된 파라미터를 제거합니다.
+ */
+OMNI.Block.Entity.prototype.undock = function () {
+	
+	var connected = this.connection;
+
+	this.connection.connection = null;
+	this.connection = null;
+	
+	this.update();
+	connected.block.update();
+
+}
+
+/**
+ *
+ * 블록에 파라미터를 추가합니다.
+ *
+ * @param {OMNI.Block.Parameter} parameter - 추가할 파라미터
+ */
+OMNI.Block.Entity.prototype.addParameter = function (parameter) {
+	this.addParameterAt(parameter, this.parameters.length);	
+}
+
+/**
+ *
+ * 블록에 파라미터를 추가합니다. 파라미터의 순서를 지정할 수 있습니다.
+ *
+ * @param {OMNI.Block.Parameter} parameter - 추가할 파라미터
+ * @param {int} index - 추가할 파라미터의 인덱스
+ */
+OMNI.Block.Entity.prototype.addParameterAt = function (parameter, index) {
+	parameter.block = this;
+	this.parameters.splice(index, 0, parameter);
+	this.container.addChild(parameter.graphics);
+}
+
+/**
+ *
+ * 블록에서 파라미터를 제거합니다.
+ *
+ * @param {OMNI.Block.Parameter} parameter - 제거할 파라미터
+ */
+OMNI.Block.Entity.prototype.removeParameter = function (parameter) {
+
+	// 제거할 블록이 실제 존재하는지 확인
+	var index = this.parameters.indexOf(parameter);
+
+	if (index > -1) {
+		parameter.block = null;
+		this.parameters.splice(index, 1);
+		this.container.removeChild(parameter.graphics);
+	}
+}
+
 
 /** 마우스로 블록을 눌렀을 때 */
 OMNI.Block.Entity.prototype.onMouseDown = function (event) {
