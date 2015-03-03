@@ -8,6 +8,8 @@ OMNI.Config.Block = {
 	BLOCK_FONT: {font: "bold 12px Arial", fill: "#000000"},
 
 	TERMINAL_HEIGHT: 12,
+	TERMINAL_MIN_WIDTH: 16,
+	TERMINAL_HITTING_EDGE_WIDTH: 8,
 	TERMINAL_TO_BLOCK_RATIO: 0.4,
 
 	// 파라미터 관련 설정
@@ -319,11 +321,53 @@ OMNI.Block.Entity.prototype._updateTerminal = function () {
 
 
 /**
+ * 두 그래픽 요소 간의 충돌 여부를 Global 레벨에서 검사합니다.
+ * o1 : 터미널, o2: 파라미터
+ */
+OMNI.Block.Entity.prototype.intersect = function(parameter) {
+
+	var o1 = this.body.terminal;
+	var o2 = parameter.graphics;
+
+    if(!this._worldOriginPoint) { this._worldOriginPoint = new PIXI.Point(0, 0); }
+
+    var p1 = o1.toGlobal(this._worldOriginPoint);
+    var p2 = o2.toGlobal(this._worldOriginPoint);
+
+    // Left check
+
+    if (p1.x + OMNI.Config.Block.TERMINAL_HITTING_EDGE_WIDTH > p2.x) {
+        if (p1.x < p2.x + o2.width) {
+           if (p1.y + o1.height > p2.y) {
+                if (p1.y < p2.y + o2.height) {
+                    return true;
+                }
+            }
+        }
+    }
+
+     // Right check
+     /*
+    if (p1.x + o1.width > p2.x) {
+        if (p1.x + o1.width - OMNI.Config.Block.TERMINAL_HITTING_EDGE_WIDTH< p2.x + o2.width) {
+           if (p1.y + o1.height > p2.y) {
+                if (p1.y < p2.y + o2.height) {
+                    return true;
+                }
+            }
+        }
+    }
+    */
+    return false;
+}
+
+/**
  * 블록을 특정 파라미터에 연결합니다.
  *
  * @param {OMNI.Block.Parameter} parameter - 이 블록과 연결된 파라미터
  */
 OMNI.Block.Entity.prototype.dock = function (parameter) {
+
 
 	this.connection = parameter;
 	parameter.connection = this;

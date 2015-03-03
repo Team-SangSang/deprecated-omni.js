@@ -190,12 +190,10 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
             for(var j = 0; j < block.parameters.length; j++) {
                 var parameter = block.parameters[j];
 
-                if (self._hitTest(parameter.graphics, target.body.terminal)) {
-                   // console.log(parameter.name)
+                if (target.intersect(parameter)){
 
-                    /* 
-                    일단 부딛히면 -> 고정                    
-                    */
+                //if (self._hitTest(target.body.terminal, parameter.graphics)) {
+                   
                     
                     target.dock(parameter);
 
@@ -213,28 +211,6 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
     this.layer[1].addChild(block.graphics);
 }
 
-/**
- * 두 그래픽 요소 간의 충돌 여부를 Global 레벨에서 검사합니다.
- *
- */
-OMNI.Workspace.prototype._hitTest = function(o1, o2) {
-
-    if(!this._worldOriginPoint) { this._worldOriginPoint = new PIXI.Point(0, 0); }
-
-    var p1 = o1.toGlobal(this._worldOriginPoint);
-    var p2 = o2.toGlobal(this._worldOriginPoint);
-
-    if (p1.x + o1.width > p2.x) {
-        if (p1.x < p2.x + o2.width) {
-           if (p1.y + o1.height > p2.y) {
-                if (p1.y < p2.y + o2.height) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
 
 /**
  *

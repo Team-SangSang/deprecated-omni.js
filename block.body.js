@@ -28,7 +28,7 @@ OMNI.Block.Body = function (name, color) {
     /** 터미널 그래픽 */
     this.terminal = new PIXI.Graphics();
     this.terminal.beginFill(this._color);
-    this.terminal.drawRect(0, 0, 100 * OMNI.Config.Block.TERMINAL_TO_BLOCK_RATIO, OMNI.Config.Block.TERMINAL_HEIGHT);
+    this.terminal.drawRect(0, 0, 100, OMNI.Config.Block.TERMINAL_HEIGHT);
 
     /** 텍스트 필드 */
     this.textfield = new PIXI.Text(this._name, OMNI.Config.Block.BLOCK_FONT);
