@@ -174,12 +174,17 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
         self.layer[1].addChild(target.graphics);
     }
 
-    block.onDrag = function(target) {
+    block.onDragStart = function(target) {
 
         // 타겟에 이미 연결된 블록이 있었다면 연결 해제
 
         if (target.connection) {
             target.undock();
+        }
+
+        if (target.targetingConnection) {
+            target.targetingConnection.highlight(false);
+            target.targetingConnection = null;
         }
 
         // 이 블록의 터미널과 다른 모든 블록의 파라미터와의 hitTest 검사를 시행합니다.
@@ -192,10 +197,12 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
 
                 if (target.intersect(parameter)){
 
-                //if (self._hitTest(target.body.terminal, parameter.graphics)) {
+                    //if (self._hitTest(target.body.terminal, parameter.graphics)) {
                    
-                    
-                    target.dock(parameter);
+                    target.targetingConnection = parameter;
+                    target.targetingConnection.highlight(true);
+
+                    //target.dock(parameter);
 
 
 
@@ -204,6 +211,14 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
                     return;
                 }
             }
+        }
+    }
+
+    block.onDragFinish = function (target) {
+        if (target.targetingConnection) {
+            target.dock(target.targetingConnection);
+            target.targetingConnection.highlight(false);
+            target.targetingConnection = null;
         }
     }
 

@@ -81,6 +81,7 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 
 	/** 이 블록의 연결 정보. 다른 블록의 파라미터가 될 수도 있고 라인일 수도 있습니다. */
 	this.connection;
+	this.targetingConnection;
 
 	// 이벤트 등록 
 	this.body.graphics.mousedown = function (e) { self.onMouseDown(e) };
@@ -102,7 +103,7 @@ OMNI.Block.Entity.prototype = {
     },
     set x(value) {
         this.graphics.x = value;
-    },
+    },    
 
     /** 블록의 y 좌표 */
     get y() {
@@ -319,6 +320,22 @@ OMNI.Block.Entity.prototype._updateTerminal = function () {
 	}
 }
 
+/**
+ * 이 블록과 하위 블록의 위치를 델타값을 사용하여 업데이트합니다.
+ */
+OMNI.Block.Entity.prototype.setGroupDelta = function (deltaX, deltaY) {
+
+	this.graphics.x += deltaX;
+	this.graphics.y += deltaY;
+
+	for (var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];
+		if (parameter.connection) {
+			parameter.connection.setGroupDelta(deltaX, deltaY);
+		}
+	}
+}
+
 
 /**
  * 두 그래픽 요소 간의 충돌 여부를 Global 레벨에서 검사합니다.
@@ -349,7 +366,7 @@ OMNI.Block.Entity.prototype.intersect = function(parameter) {
      // Right check
      /*
     if (p1.x + o1.width > p2.x) {
-        if (p1.x + o1.width - OMNI.Config.Block.TERMINAL_HITTING_EDGE_WIDTH< p2.x + o2.width) {
+        if (p1.x + o1.width - OMNI.Config.Block.TERMINAL_HITTING_EDGE_WIDTH < p2.x + o2.width) {
            if (p1.y + o1.height > p2.y) {
                 if (p1.y < p2.y + o2.height) {
                     return true;
@@ -367,7 +384,6 @@ OMNI.Block.Entity.prototype.intersect = function(parameter) {
  * @param {OMNI.Block.Parameter} parameter - 이 블록과 연결된 파라미터
  */
 OMNI.Block.Entity.prototype.dock = function (parameter) {
-
 
 	this.connection = parameter;
 	parameter.connection = this;
@@ -454,10 +470,11 @@ OMNI.Block.Entity.prototype.onMouseDown = function (event) {
 	this._prevX = 0;
 	this._prevY = 0;
 
+	this.onDragStart(this);
 	this._intervalId = setInterval(function () {
 
 		if(self.x != self._prevX || self.y != self._prevY) {
-			self.onDrag(self);
+			self.onDragStart(self);
 
 			self._prevX = self.x;
 			self._prevY = self.y;
@@ -468,6 +485,8 @@ OMNI.Block.Entity.prototype.onMouseDown = function (event) {
 /** 마우스가 블록을 누르기를 그만두었을 때 */
 OMNI.Block.Entity.prototype.onMouseUp = function (event) {
 	this._dragging = false;
+
+	this.onDragFinish(this);
 
 	// 드래그 이벤트 해제
 	clearInterval(this._intervalId);
@@ -492,8 +511,10 @@ OMNI.Block.Entity.prototype.onMouseMove = function (event) {
 
 		event.getLocalPosition(this.graphics.parent, this._localPosition);
 
-		this.x = this._localPosition.x - this._localOriginPosition.x;
-		this.y = this._localPosition.y - this._localOriginPosition.y;
+		var deltaX = this._localPosition.x - this._localOriginPosition.x - this.x;
+		var deltaY = this._localPosition.y - this._localOriginPosition.y - this.y;
+
+		this.setGroupDelta(deltaX, deltaY);
 	}
 }
 
@@ -505,8 +526,15 @@ OMNI.Block.Entity.prototype.onMouseMove = function (event) {
 OMNI.Block.Entity.prototype.onFocus = function (targetBlock) { }
 
 /**
- * 마우스로 블록을 움직일 때 (Dispatch 용) 
+ * 마우스로 블록을 드래그하기 시작했을 때 (Dispatch 용) 
  *
  * @param {OMNI.Block.Entity} - 클릭된 블록
  */
-OMNI.Block.Entity.prototype.onDrag = function (targetBlock) { }
+OMNI.Block.Entity.prototype.onDragStart = function (targetBlock) { }
+
+/**
+ * 드래그가 끝났을 때 (Dispatch 용) 
+ *
+ * @param {OMNI.Block.Entity} - 클릭된 블록
+ */
+OMNI.Block.Entity.prototype.onDragFinish = function (targetBlock) { }
