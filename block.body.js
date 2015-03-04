@@ -37,6 +37,12 @@ OMNI.Block.Body = function (name, color) {
     this.graphics.addChild(this.terminal);
     this.graphics.addChild(this.textfield);
 
+    /** 트윈 */
+    this.tween = new TWEEN.Tween(this.box);
+    this.tweenTarget = {
+        width: 100
+    };
+
     this.update();
 
 };
@@ -45,13 +51,15 @@ OMNI.Block.Body.prototype = {
 
 	/** 블록의 가로 길이 */
    	get width() {
-        return this.box.width;
+        return this.tweenTarget.width;
     },
     set width(value) {
 
     	var max = Math.max(Math.max(value, OMNI.Config.Block.BLOCK_MIN_WIDTH), this.textfield.width + OMNI.Config.Block.BLOCK_WIDTH_PADDING * 2);
 
-        this.box.width = max;
+        this.tweenTarget.width = max;
+
+        this.updateTween();
 
         // 업데이트
         this.update();
@@ -136,13 +144,21 @@ OMNI.Block.Body.prototype.update = function () {
 
 	// 터미널을 중앙 정렬합니다.
 
-	this.terminal.x = (this.box.width - this.terminal.width) / 2;
+	this.terminal.x = (this.tweenTarget.width - this.terminal.width) / 2;
 	this.terminal.y = this.box.height - 1;
 
 	// 텍스트를 중앙 하단으로 정렬합니다.
 
-	this.textfield.x = Math.floor((this.box.width - this.textfield.width) / 2);
+	this.textfield.x = Math.floor((this.tweenTarget.width - this.textfield.width) / 2);
 	this.textfield.y = Math.floor(this.box.height - this.textfield.height - 2);
+}
+
+OMNI.Block.Body.prototype.updateTween = function () {
+    if (this.tween) {
+        this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();        
+    } else {
+        this.box.width = this.tweenTarget.width;
+    }
 }
 
 OMNI.Block.Body.prototype.highlight = function (on) {

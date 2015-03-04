@@ -91,6 +91,18 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 	this.body.graphics.mouseout = function (e) { self.onMouseRollOut(e) };
 	this.body.graphics.mousemove = function (e) { self.onMouseMove(e) };
 
+
+	/** 트윈 데이터 */
+	this.tween = new TWEEN.Tween(this.graphics);
+	this.tweenTarget = {
+		x: 0
+	}
+
+	this.containerTween = new TWEEN.Tween(this.container);
+	this.containerTweenTarget = {
+		x: 0
+	}
+
 	// 업데이트
 	this.update();
 }
@@ -99,17 +111,24 @@ OMNI.Block.Entity.prototype = {
 
 	/** 블록의 x 좌표 */
 	get x() {
-        return this.graphics.x;
+        return this.tweenTarget.x;
     },
     set x(value) {
+    	this.tweenTarget.x = value;
+    	this.updateTween();
+    },
+    set x_t(value) {    	
         this.graphics.x = value;
-    },    
+    },
 
     /** 블록의 y 좌표 */
     get y() {
         return this.graphics.y;
     },
     set y(value) {
+        this.graphics.y = value;
+    },
+    set y_t(value) {    	
         this.graphics.y = value;
     },
 
@@ -125,7 +144,7 @@ OMNI.Block.Entity.prototype = {
 
     /** 블록의 가로 길이 */
     get width() {
-    	return this.graphics.width;
+    	return this.body.width;
     },
 
     /** 블록의 세로 길이 */
@@ -195,6 +214,25 @@ OMNI.Block.Entity.prototype.update = function (ascending) {
 
 }
 
+OMNI.Block.Entity.prototype.updateTween = function () {
+    if (this.tween) {
+        this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+        //this.containerTween.to(this.containerTweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();       
+    } else {
+        this.graphics.x = this.tweenTarget.x;
+        //this.container.x = this.containerTweenTarget.x;
+    }
+}
+
+OMNI.Block.Entity.prototype.updateInternalTween = function () {
+    if (this.tween) {
+        //this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+        this.containerTween.to(this.containerTweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();       
+    } else {
+        //this.graphics.x = this.tweenTarget.x;
+        this.container.x = this.containerTweenTarget.x;
+    }
+}
 
 /**
  * 이 블록에 연결된 상위 블록의 파라미터와 위치를 일치시킵니다.
@@ -208,7 +246,7 @@ OMNI.Block.Entity.prototype._updatePosition = function () {
 
 		if (root) {
 
-			this.x = root.x + this.connection.x + (this.connection.width - root.width) / 2;
+			this.x = this.connection.block.x + this.connection.x + (this.connection.width - this.connection.block.width) / 2;
 			this.y = root.y - this.height;
 
 		}
@@ -240,7 +278,8 @@ OMNI.Block.Entity.prototype._updateSize = function () {
 		this._updateParameters(extendedSpace);
 	}
 
-	this.container.x = - Math.floor(this.body.width / 2);	
+	this.containerTweenTarget.x = - Math.floor(this.body.width / 2);
+	this.updateInternalTween();
 }
 
 /**
@@ -327,6 +366,8 @@ OMNI.Block.Entity.prototype.setGroupDelta = function (deltaX, deltaY) {
 
 	this.graphics.x += deltaX;
 	this.graphics.y += deltaY;
+
+	this.tweenTarget.x += deltaX;
 
 	for (var i = 0; i < this.parameters.length; i++) {
 		var parameter = this.parameters[i];
