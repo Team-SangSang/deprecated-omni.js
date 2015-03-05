@@ -321,7 +321,7 @@ OMNI.Block.Entity.prototype._updateParameters = function (space) {
 			} else {
 
 				parameterWidth = parameter.connection.leftProminent + parameter.connection.width + parameter.connection.rightProminent;
-				parameter.x = widthAccumulation + (parameterWidth - parameter.width) / 2;
+				parameter.x = widthAccumulation + parameter.connection.leftProminent + (parameter.connection.width - parameter.width) / 2;
 
 			}
 
