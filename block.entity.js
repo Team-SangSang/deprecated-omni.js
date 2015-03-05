@@ -272,8 +272,8 @@ OMNI.Block.Entity.prototype._updateSize = function () {
 	var gap = this.body.width - blockWidthInfo[1];
 
 	if (gap > 0 && this.parameters.length > 0) {
-
-		var extendedSpace = (gap + OMNI.Config.Block.SPACE_ADJACENT_BLOCK * (this.parameters.length - 1)) / (this.parameters.length + 1);
+		console.log(this.name)
+		var extendedSpace = (gap + OMNI.Config.Block.SPACE_ADJACENT_BLOCK * (this.parameters.length - 1)) / (this.parameters.length - 1);
 
 		this._updateParameters(extendedSpace);
 	}

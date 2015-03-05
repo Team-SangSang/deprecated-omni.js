@@ -77,30 +77,43 @@ OMNI.Workspace = function(width, height) {
     // Load resources. All works are suspended until loading is completed.
     loadGraphicsResources(function(){
 
+        var ttt = ["string", "integer", "void"]
+
         for (var i = 0; i < 10; i++) {
-            self.addBlock("test_block_" + i, "string", [{
+            self.addBlock("test_block_" + i, ttt[i % 3], [{
                     name: "Integer",
                     type: "integer"}, { 
+
+                    name: "Void",
+                    type: "void"}, { 
 
                     name: "String",
                     type: "string"}]);
         }
 
-        self.addBlock("test_long_name_block 한글지원", "string", [{
-                    name: "인티저 입려크",
+        self.addBlock("블록 이름은 물론 한글도 됩니다!", "string", [{
+                    name: "숫자 타입!!",
                     type: "integer",
                     desciption: "afasfasf" }, { 
 
-                    name: "스트링 입력",
+                    name: "문~~자 타입",
                     type: "string",
+                    description: "test parameter~~!" }, { 
+
+                    name: "gg",
+                    type: "string",
+                    description: "test parameter~~!" }, { 
+
+                    name: "ss",
+                    type: "integer",
                     description: "test parameter~~!" }]);
 
-        self.addBlock("숏네임 블로크", "integer", [{
-                    name: "스트으링 입려크",
+        self.addBlock("ㅋㅋ", "integer", [{
+                    name: "ㅎㅇ",
                     type: "integer",
                     desciption: "afasfasf" }, { 
 
-                    name: "인티저어 입력",
+                    name: "ㅂㅂ",
                     type: "string",
                     description: "test parameter~~!" }]);
 
@@ -170,8 +183,32 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
     block.y = Math.random() * 500;
 
     block.onFocus = function(target) {
-        self.layer[1].removeChild(target.graphics);
-        self.layer[1].addChild(target.graphics);
+
+        // 연결된 유닛을 모두 remove / add 한다.
+
+        var connectedBlocks = [];
+
+        searchParameters(target, connectedBlocks);
+
+        function searchParameters(block, buffer) {
+
+            buffer.push(block);
+
+            for(var i = 0; i < block.parameters.length; i++) {
+                var parameter = block.parameters[i];
+
+                if (parameter.connection) {
+                    searchParameters(parameter.connection, buffer);
+                }
+
+            }
+        }
+
+        for (var i = 0; i < connectedBlocks.length; i++) {            
+            self.layer[1].removeChild(connectedBlocks[i].graphics);
+            self.layer[1].addChild(connectedBlocks[i].graphics);
+        }
+        
     }
 
     block.onDragStart = function(target) {
@@ -196,6 +233,11 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
                 var parameter = block.parameters[j];
 
                 if (target.intersect(parameter)){
+
+                    // 만약 이미 연결된 블록이 있다면 비활성화
+                    if (parameter.connection) {
+                        return;
+                    }
 
                     //if (self._hitTest(target.body.terminal, parameter.graphics)) {
                    
