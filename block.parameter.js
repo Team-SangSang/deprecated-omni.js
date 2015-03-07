@@ -135,8 +135,8 @@ OMNI.Block.Parameter.prototype.update = function () {
 
 	// 텍스트 필드 위치 업데이트
 
-	this.textfield.x = Math.floor((this.box.width - this.textfield.width) / 2);
-    this.textfield.y = Math.floor((this.box.height - this.textfield.height) / 2) + 2;
+	this.textfield.x = Math.floor((this.box.width - this.textfield.width) / 2) + 0.5;
+    this.textfield.y = Math.floor((this.box.height - this.textfield.height) / 2) + 2.5;
 }
 
 OMNI.Block.Parameter.prototype.highlight = function (on) {

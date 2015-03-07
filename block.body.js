@@ -7,8 +7,9 @@
  * @constructor
  * @param {String} name - 블록에 표시될 텍스트입니다.
  * @param {int} color - 블록의 색깔입니다. (기본값: <Void 색상>)
+ * @param {boolean} hasReturn - 블록에 리턴값이 있는지 확인합니다. 리턴값이 있으면 네모, 없으면 세모 
  */
-OMNI.Block.Body = function (name, color) {
+OMNI.Block.Body = function (name, color, hasReturn) {
 
 	/** 블록 텍스트 */
 	this._name = name || "undefined";
@@ -22,13 +23,14 @@ OMNI.Block.Body = function (name, color) {
 
 	/** 상자 그래픽 */
     this.box = new PIXI.Graphics();
-    this.box.beginFill(this._color);
-    this.box.drawRect(0, 0, 100, OMNI.Config.Block.BLOCK_HEIGHT);
     
     /** 터미널 그래픽 */
+
+    this.hasReturn = hasReturn || false;
+
     this.terminal = new PIXI.Graphics();
-    this.terminal.beginFill(this._color);
-    this.terminal.drawRect(0, 0, 100, OMNI.Config.Block.TERMINAL_HEIGHT);
+
+    
 
     /** 텍스트 필드 */
     this.textfield = new PIXI.Text(this._name, OMNI.Config.Block.BLOCK_FONT);
@@ -43,6 +45,7 @@ OMNI.Block.Body = function (name, color) {
         width: 100
     };
 
+    this.redraw();
     this.update();
 
 };
@@ -67,7 +70,7 @@ OMNI.Block.Body.prototype = {
 
     /** 블록의 세로 길이. */
     get height() {
-        return this.box.height;
+        return this.box.height || 100;
     },
     set height(value) {
         this.box.height = value;
@@ -123,16 +126,8 @@ OMNI.Block.Body.prototype = {
     set color(value) {
         this._color = value;
 
-        var width = this.width;
-        var height = this.height;
-
-	    this.box.clear();
-	    this.box.beginFill(value);
-	    this.box.drawRect(0, 0, width, height);
-
-	    this.terminal.clear();
-	    this.terminal.beginFill(value);
-    	this.terminal.drawRect(0, 0, width, OMNI.Config.Block.TERMINAL_HEIGHT);
+        this.redraw();
+        this.update();
     },
 
 }
@@ -150,7 +145,7 @@ OMNI.Block.Body.prototype.update = function () {
 	// 텍스트를 중앙 하단으로 정렬합니다.
 
 	this.textfield.x = Math.floor((this.tweenTarget.width - this.textfield.width) / 2);
-	this.textfield.y = Math.floor(this.box.height - this.textfield.height - 2);
+	this.textfield.y = Math.floor(this.box.height - this.textfield.height) + 4;
 }
 
 OMNI.Block.Body.prototype.updateTween = function () {
@@ -159,6 +154,34 @@ OMNI.Block.Body.prototype.updateTween = function () {
     } else {
         this.box.width = this.tweenTarget.width;
     }
+}
+
+OMNI.Block.Body.prototype.redraw = function (){
+
+    var width = this.width;
+    var height = this.height;
+
+    this.box.clear();
+
+    this.box.beginFill(this._color);
+    this.box.drawRect(0, 0, width, height);
+
+    this.terminal.clear();
+
+    if (this.hasReturn) {
+
+        this.terminal.beginFill(this._color);
+        this.terminal.drawRect(0, 0, width, OMNI.Config.Block.TERMINAL_HEIGHT);
+
+    } else {
+        this.terminal.beginFill(this._color);        
+        this.terminal.moveTo(0, 0);
+        this.terminal.lineTo(width, 0);
+        this.terminal.lineTo(width / 2, OMNI.Config.Block.TERMINAL_HEIGHT);
+        this.terminal.endFill();
+
+    }
+
 }
 
 OMNI.Block.Body.prototype.highlight = function (on) {

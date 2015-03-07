@@ -50,6 +50,7 @@ OMNI.Config.Workspace = {
 OMNI.Workspace = function(width, height) {
     
     var self = this;
+
     width = width || OMNI.Config.Workspace.DEFAULT_WIDTH;
     height = height || OMNI.Config.Workspace.DEFAULT_HEIGHT;
 
@@ -77,7 +78,9 @@ OMNI.Workspace = function(width, height) {
     // Load resources. All works are suspended until loading is completed.
     loadGraphicsResources(function(){
 
-        var ttt = ["string", "integer", "void"]
+        self.addProcedure();
+
+        var ttt = ["string", "integer", "void"];
 
         for (var i = 0; i < 10; i++) {
             self.addBlock("test_block_" + i, ttt[i % 3], [{
@@ -91,12 +94,12 @@ OMNI.Workspace = function(width, height) {
                     type: "string"}]);
         }
 
-        self.addBlock("블록 이름은 물론 한글도 됩니다!", "string", [{
-                    name: "숫자 타입!!",
+        self.addBlock("wrhwrh", "string", [{
+                    name: "wrhwrh",
                     type: "integer",
                     desciption: "afasfasf" }, { 
 
-                    name: "문~~자 타입",
+                    name: "aab33",
                     type: "string",
                     description: "test parameter~~!" }, { 
 
@@ -108,12 +111,12 @@ OMNI.Workspace = function(width, height) {
                     type: "integer",
                     description: "test parameter~~!" }]);
 
-        self.addBlock("ㅋㅋ", "integer", [{
-                    name: "ㅎㅇ",
+        self.addBlock("egwqeg", "integer", [{
+                    name: "adb",
                     type: "integer",
                     desciption: "afasfasf" }, { 
 
-                    name: "ㅂㅂ",
+                    name: "33ag",
                     type: "string",
                     description: "test parameter~~!" }]);
 

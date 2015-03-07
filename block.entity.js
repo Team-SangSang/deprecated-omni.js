@@ -2,6 +2,37 @@ OMNI.Config.Block = {
 
 	// 블록 관련 설정
 
+	BLOCK_HEIGHT: 15,
+	BLOCK_MIN_WIDTH: 20,
+	BLOCK_WIDTH_PADDING: 5,
+	BLOCK_FONT: {font: "bold 9px Segoe UI", fill: "#000000"},
+
+	TERMINAL_HEIGHT: 12,
+	TERMINAL_MIN_WIDTH: 16,
+	TERMINAL_HITTING_EDGE_WIDTH: 8,
+	TERMINAL_TO_BLOCK_RATIO: 0.4,
+
+	// 파라미터 관련 설정
+
+	PARAMETER_HEIGHT: 14,
+	PARAMETER_MIN_WIDTH: 14,
+	PARAMETER_WIDTH_PADDING: 4,
+	PARAMETER_FONT: {font: "9px Segoe UI", fill: "#FFFFFF"},
+
+	// 인접한 블록 사이의 최소 여백
+
+	SPACE_ADJACENT_BLOCK: 7,
+
+	// 블록 드래그 이벤트 호출 Interval
+
+	DRAG_EVENT_INTERVAL: 200,
+
+}
+/*
+OMNI.Config.Block = {
+
+	// 블록 관련 설정
+
 	BLOCK_HEIGHT: 25,
 	BLOCK_MIN_WIDTH: 30,
 	BLOCK_WIDTH_PADDING: 9,
@@ -28,7 +59,7 @@ OMNI.Config.Block = {
 	DRAG_EVENT_INTERVAL: 200,
 
 }
-
+*/
  /**
  *
  * 코드 블록
@@ -63,9 +94,7 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 	this.graphics.addChild(this.container);
 
 	/** 블록 구성 요소 */
-	this.body = new OMNI.Block.Body(this._name);
-
-	this.body.color = OMNI.Config.Code.Data.get(returnType).color;
+	this.body = new OMNI.Block.Body(this._name, OMNI.Config.Code.Data.get(returnType).color, this._returnType != "void");
 
 	this.container.addChild(this.body.graphics);
 
