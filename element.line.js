@@ -459,6 +459,15 @@ OMNI.Element.Line.prototype.showHintspot = function (index) {
     // Add to line container, not elements container. (mouse issue)
     this.hintspot.visible = true;
 
+    this.hintspot.graphics.mouseup = function (e) {
+
+        if (OMNI.Shared.selectedBlock) {
+            // 여기에 블록 추가하는 명령을 짜면 된다.
+            this.addElement(OMNI.Shared.selectedBlock)
+        }
+
+    }
+
     this.hintspot.graphics.click = function (e) {
         
         if (OMNI.Shared.mode == 1) {

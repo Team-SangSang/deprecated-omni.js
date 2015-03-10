@@ -83,6 +83,10 @@ OMNI.Element.HintSpot.prototype = {
 
 }
 
+OMNI.Element.HintSpot.prototype.update = function () {
+    
+}
+
 OMNI.Element.HintSpot.prototype.updateTween = function () {
 
     if (this.tween) {

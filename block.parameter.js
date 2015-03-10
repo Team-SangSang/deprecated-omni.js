@@ -26,10 +26,10 @@ OMNI.Block.Parameter = function (name, dataType, options) {
 	this._necessary = (options ? options.necessary : false) || false;
 
 	/** 이 파라미터가 속한 부모 블록 */
-    this.block;
+    this.parentBlock;
 
     /** 이 파라미터와 연결되어 있는 블록 */
-	this.connection;
+	this.connectedBlock;
 
 	/** 그래픽스 */
 	this.graphics = new PIXI.DisplayObjectContainer();
@@ -39,7 +39,7 @@ OMNI.Block.Parameter = function (name, dataType, options) {
 	this.textfield = new PIXI.Text(this._name, OMNI.Config.Block.PARAMETER_FONT);
 
     this.box = new PIXI.Graphics();
-    this.box.beginFill( OMNI.Config.Code.Data.get(dataType).color );
+    this.box.beginFill( OMNI.Config.Block.Type.get(dataType).color );
     this.box.drawRect(0, 0, Math.max(this.textfield.width, OMNI.Config.Block.PARAMETER_MIN_WIDTH) + OMNI.Config.Block.PARAMETER_WIDTH_PADDING * 2, OMNI.Config.Block.PARAMETER_HEIGHT);
 
     this.graphics.addChild(this.box);
@@ -130,7 +130,7 @@ OMNI.Block.Parameter.prototype = {
 OMNI.Block.Parameter.prototype.update = function () {
 
 	this.box.clear();
-	this.box.beginFill(OMNI.Config.Code.Data.get(this._dataType).color);
+	this.box.beginFill(OMNI.Config.Block.Type.get(this._dataType).color);
     this.box.drawRect(0, 0, Math.max(this.textfield.width, OMNI.Config.Block.PARAMETER_MIN_WIDTH) + OMNI.Config.Block.PARAMETER_WIDTH_PADDING * 2, OMNI.Config.Block.PARAMETER_HEIGHT);     
 
 	// 텍스트 필드 위치 업데이트

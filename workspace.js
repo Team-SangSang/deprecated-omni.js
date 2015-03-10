@@ -8,9 +8,8 @@ OMNI.Config = {};
 
 OMNI.Shared = {
     mode: 2,
-    integer:0xD02090,
-    string:0x1C86EE,
-    void:0xEEC900
+    selectedBlock:null,
+    originPoint: new PIXI.Point(0, 0)
 }
 
 OMNI.Config.Tween = {
@@ -29,7 +28,7 @@ OMNI.Config.Workspace = {
 	LAYER_PROCEDURE_X: 0,
 	LAYER_PROCEDURE_Y: 0,
 
-	PADDING_X: 10,
+	PADDING_X: 200,
     PADDING_Y: 50,
 
     BACKGROUND_COLOR: 0xDDDDDD
@@ -50,7 +49,7 @@ OMNI.Config.Workspace = {
 OMNI.Workspace = function(width, height) {
     
     var self = this;
-
+    OMNI.Shared.workspace = this;
     width = width || OMNI.Config.Workspace.DEFAULT_WIDTH;
     height = height || OMNI.Config.Workspace.DEFAULT_HEIGHT;
 
@@ -69,6 +68,8 @@ OMNI.Workspace = function(width, height) {
     /** 스테이지에 있는 블록들의 목록입니다. */
     this.blocks = [];
 
+    this.palette;
+
     // Initialize layers    
     for (var i = 0; i < 3; i++) {
         this.layer[i] = new PIXI.DisplayObjectContainer();
@@ -76,54 +77,17 @@ OMNI.Workspace = function(width, height) {
     };
 
     // Load resources. All works are suspended until loading is completed.
-    loadGraphicsResources(function(){
+    loadGraphicsResources(function() {
 
-        self.addProcedure();
+        self.palette = new OMNI.Palette(self);
+        self.layer[2].addChild(self.palette.graphics);
 
-        var ttt = ["string", "integer", "void"];
-
-        for (var i = 0; i < 10; i++) {
-            self.addBlock("test_block_" + i, ttt[i % 3], [{
-                    name: "Integer",
-                    type: "integer"}, { 
-
-                    name: "Void",
-                    type: "void"}, { 
-
-                    name: "String",
-                    type: "string"}]);
-        }
-
-        self.addBlock("wrhwrh", "string", [{
-                    name: "wrhwrh",
-                    type: "integer",
-                    desciption: "afasfasf" }, { 
-
-                    name: "aab33",
-                    type: "string",
-                    description: "test parameter~~!" }, { 
-
-                    name: "gg",
-                    type: "string",
-                    description: "test parameter~~!" }, { 
-
-                    name: "ss",
-                    type: "integer",
-                    description: "test parameter~~!" }]);
-
-        self.addBlock("egwqeg", "integer", [{
-                    name: "adb",
-                    type: "integer",
-                    desciption: "afasfasf" }, { 
-
-                    name: "33ag",
-                    type: "string",
-                    description: "test parameter~~!" }]);
+        self.addProcedure(OMNI.Config.Block.Predefined.INIT);
 
     });
   
     function loadGraphicsResources(onLoad) {
-        var loader = new PIXI.AssetLoader(["./gui.json"]);
+        var loader = new PIXI.AssetLoader(["./palette-ui.json"]);
         loader.onComplete = onLoad;
         loader.load();
     }
@@ -144,30 +108,21 @@ OMNI.Workspace = function(width, height) {
  */
 OMNI.Workspace.prototype.update = function() {
 
-    // X-Axis align
-
     var accumulatedWidth = OMNI.Config.Workspace.PADDING_X;
     
     for (var i in this.procedures) {
     	var procedure = this.procedures[i];
 
-        procedure.x = accumulatedWidth + procedure.line.elementsWidthOfLeft;
-        procedure.y = OMNI.Config.Workspace.PADDING_Y;
+        procedure.x = accumulatedWidth + Math.max(procedure.line.leftProminentWidth, procedure.entryBlock.width / 2);
+        procedure.y = OMNI.Config.Workspace.PADDING_Y + procedure.entryBlock.height;
 
-        accumulatedWidth += procedure.line.elementsWidth + OMNI.Config.Workspace.SPACING;
+        accumulatedWidth += Math.max(procedure.line.width, procedure.entryBlock.width) + OMNI.Config.Workspace.SPACING;
     }
 
-    // Align procedure layer to center if there are enough spaces.
-
-    this.layer[0].x = 0;
-
-    var availableSpace = this.renderer.width - OMNI.Config.Workspace.LAYER_PROCEDURE_X
-
-    if (accumulatedWidth < availableSpace) {
-        this.layer[0].x = (availableSpace - accumulatedWidth) / 2;
+    for (var i in this.procedures) {
+        this.procedures[i].update(false);
     }
 
-    this.layer[0].x += OMNI.Config.Workspace.LAYER_PROCEDURE_X;
 }
 
 /**
@@ -176,51 +131,56 @@ OMNI.Workspace.prototype.update = function() {
  *
  * @param {OMNI.Procedure} - Procedure block is being added.
  */
-OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
+OMNI.Workspace.prototype.addBlock = function(arr) {
         
     var self = this;
 
-    var block = new OMNI.Block.Entity(a,b,c,d);
+    var block = new OMNI.Block.Entity(arr[0], arr[1], arr[3]);
     
     block.x = Math.random() * 500 + 100;
     block.y = Math.random() * 500;
 
+    this.regBlock(block);
+
+    return block;
+}
+
+OMNI.Workspace.prototype.regBlock = function(block) {
+        
+    var self = this;
+
     block.onFocus = function(target) {
 
-        // 연결된 유닛을 모두 remove / add 한다.
+        // 타겟에 이미 연결된 블록이 있었다면 연결 해제
 
-        var connectedBlocks = [];
-
-        searchParameters(target, connectedBlocks);
-
-        function searchParameters(block, buffer) {
-
-            buffer.push(block);
-
-            for(var i = 0; i < block.parameters.length; i++) {
-                var parameter = block.parameters[i];
-
-                if (parameter.connection) {
-                    searchParameters(parameter.connection, buffer);
-                }
-
-            }
+        if (target.connectedParameter) {
+            target.undock();
         }
 
-        for (var i = 0; i < connectedBlocks.length; i++) {            
+        if (target.connectedLine) {
+            target.connectedLine.removeElement(target);
+            target.connectedLine = null;
+        }
+
+        if(target.returnType == "void") {
+            OMNI.Shared.selectedBlock = target;
+        }
+
+        var connectedBlocks = target.getAllAncestorBlocks();
+
+        for (var i = 0; i < connectedBlocks.length; i++) {
+
+            if( i > 0 ){
+                connectedBlocks[i].graphics.alpha = OMNI.Config.Block.ANCESTOR_ALPHA;
+            }
+
             self.layer[1].removeChild(connectedBlocks[i].graphics);
             self.layer[1].addChild(connectedBlocks[i].graphics);
         }
         
     }
 
-    block.onDragStart = function(target) {
-
-        // 타겟에 이미 연결된 블록이 있었다면 연결 해제
-
-        if (target.connection) {
-            target.undock();
-        }
+    block.onDrag = function(target) {
 
         if (target.targetingConnection) {
             target.targetingConnection.highlight(false);
@@ -238,19 +198,16 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
                 if (target.intersect(parameter)){
 
                     // 만약 이미 연결된 블록이 있다면 비활성화
-                    if (parameter.connection) {
+                    if (parameter.connectedBlock) {
+                        return;
+                    }
+                    
+                    if(parameter.dataType != target.returnType) {
                         return;
                     }
 
-                    //if (self._hitTest(target.body.terminal, parameter.graphics)) {
-                   
                     target.targetingConnection = parameter;
                     target.targetingConnection.highlight(true);
-
-                    //target.dock(parameter);
-
-
-
 
                     // 루틴 종료
                     return;
@@ -259,16 +216,30 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
         }
     }
 
-    block.onDragFinish = function (target) {
+    block.onRelease = function (target) {
+
+        //OMNI.Shared.selectedBlock = null;
+
         if (target.targetingConnection) {
             target.dock(target.targetingConnection);
             target.targetingConnection.highlight(false);
             target.targetingConnection = null;
         }
+
+        var connectedBlocks = target.getAllAncestorBlocks();
+
+        for (var i = 0; i < connectedBlocks.length; i++) {
+
+            if( i > 0 ){
+                connectedBlocks[i].graphics.alpha = 1;
+            }
+        }
     }
 
     this.blocks.push(block);
     this.layer[1].addChild(block.graphics);
+
+    return block;
 }
 
 
@@ -278,17 +249,33 @@ OMNI.Workspace.prototype.addBlock = function(a,b,c,d) {
  * 
  * @return {OMNI.Procedure}
  */
-OMNI.Workspace.prototype.addProcedure = function() {
+OMNI.Workspace.prototype.addProcedure = function(entryData) {
 
-    var procedure = new OMNI.Procedure();
-
+    var procedure = new OMNI.Procedure(entryData);
+    procedure.parent = this;
     // Registeration
     this.procedures.push(procedure);
-    this.layer[0].addChild(procedure.graphics);
+    this.blocks.push(procedure.entryBlock);
+    this.layer[1].addChild(procedure.entryBlock.graphics);
+    this.layer[0].addChild(procedure.line.graphics);
 
     this.update();
 
     return procedure;
+}
+
+
+OMNI.Workspace.prototype.createBranch = function(direction) {
+
+    var branch = new OMNI.Branch(direction);
+    this.layer[1].addChild(branch.entryBlock.graphics);
+    this.blocks.push(branch.entryBlock);
+    this.layer[0].addChild(branch.horizontal_top.graphics);
+    this.layer[0].addChild(branch.horizontal_bottom.graphics);
+    this.layer[0].addChild(branch.trueLine.graphics);
+    this.layer[0].addChild(branch.falseLine.graphics);
+
+    return branch;
 }
 
 /**

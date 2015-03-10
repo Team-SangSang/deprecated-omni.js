@@ -1,5 +1,233 @@
 OMNI.Config.Block = {
 
+	// 데이터 타입
+
+	Type: {
+		get: function (dataType) {
+			switch (dataType.toLowerCase()) {
+				case "number": return OMNI.Config.Block.Type.NUMBER;
+				case "string": return OMNI.Config.Block.Type.STRING;
+				case "boolean": return OMNI.Config.Block.Type.BOOLEAN;
+				case "array": return OMNI.Config.Block.Type.ARRAY;
+				case "union": return OMNI.Config.Block.Type.UNION;
+				case "void": return OMNI.Config.Block.Type.VOID;
+				case "branch": return OMNI.Config.Block.Type.BRANCH;
+				case "loop": return OMNI.Config.Block.Type.LOOP;
+				default: return OMNI.Config.Block.Type.UNDEFINED;
+			}
+		},
+		NUMBER: { color:0x2196F3 }, // blue
+		STRING: { color:0x64DD17 },	// light green	
+		BOOLEAN: { color:0xFF5722 }, // Orange
+		ARRAY: { color:0x1C86EE },
+		UNION: { color:0x4A148C },
+		VOID: { color:0xFFC107 }, // amber
+		BRANCH: { color:0xFFEB3B }, //yellow
+		LOOP: { color:0xFFEB3B }, // yelow
+		UNDEFINED: { color:0x607D8B }, // blue grey
+	},
+
+	// 블록 정의
+
+	Predefined: {
+		/*예시: ["블록 이름",
+				 "블록 타입",
+				 "블록 설명", [{
+
+                 name: "파리미터 이름",
+                 type: "파라미터 타입",
+                 desciption: "파라미터 설명" }, { 
+
+                 name: "파라미터 이름",
+                 type: "파리미터 타입",
+                 description: "파라미터 설명" }],
+
+                 function (a, b) {
+                 	return;
+                 }],*/
+        STRING: ["String", "string", "string",[], function () { }],
+        NUMBER: ["Number", "number", "number",[], function () { }],
+        BRANCH: ["Branch",
+				 "branch",
+				 "Splits the line into two.", [{
+
+                 name: "Condition",
+                 type: "boolean",
+                 description: "branch condition" }],
+
+                 function (a, b, c) {
+                 	return "if (" + a + "== true) {\n" + b + "\n} else {\n" + c + "\n}\n";
+                 }],
+
+        INIT: ["Program start",
+				 "void",
+				 "Entry of program.", [],
+
+                 function (a) {
+                 	return "function () {\n" + a + "\n}\n";
+                 }],
+
+        CLICKED: ["When clicked",
+				 "void",
+				 "clicked", [],
+
+                 function (a) {
+                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
+                 }],
+
+        COLLIDED: ["When collided",
+				 "void",
+				 "clicked", [{
+
+                 name: "target",
+                 type: "union",
+                 description: "collided object" }],
+
+                 function (a) {
+                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
+                 }],
+        TIMER: ["Every given seconds",
+				 "void",
+				 "clicked", [{
+
+                 name: "seconds",
+                 type: "number",
+                 description: "tick time" }],
+
+                 function (a) {
+                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
+                 }],
+
+        KEY_PRESSED: ["When key pressed",
+				 "void",
+				 "key pressed", [{
+
+                 name: "Pressed key",
+                 type: "string",
+                 description: "pressed key" }],
+
+                 function (a) {
+                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
+                 }],
+
+        // 사칙연산부터 정의한다!
+
+        SES: ["assign", "void", "set", [{name:"target", type:"string"}, {name:"value", type:"string"}], function () {} ],
+        SEN: ["assign", "void", "set", [{name:"target", type:"number"}, {name:"value", type:"number"}], function () {} ],
+        ADD: ["+", "number", "add", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        SUB: ["-", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        MUL: ["*", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        DIV: ["/", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        MOD: ["mod", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        BIG: [">", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        BGE: [">=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        SML: ["<", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        SME: ["<=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        EQL: ["equal", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        NOT: ["not", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        AND: ["and", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        ORR: ["or", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
+        NTS: ["Number to string", "string", "set", [{name:"Number", type:"number"}], function () {} ],
+		STN: ["String to number", "number", "set", [{name:"String", type:"string"}], function () {} ],
+
+        MOVE_BY: ["Move by",
+				 "void",
+				 "Moves union by some amount", [{
+
+                 name: "target",
+                 type: "union",
+                 desciption: "union to move" },{
+
+                 name: "x",
+                 type: "number",
+                 desciption: "x amount" }, { 
+
+                 name: "y",
+                 type: "number",
+                 description: "y amount" }, { 
+
+                 name: "z",
+                 type: "number",
+                 description: "z amount" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }],
+
+        MOVE_TO: ["Move to",
+				 "void",
+				 "Moves union by some amount", [{
+
+                 name: "target",
+                 type: "union",
+                 desciption: "union to move" },{
+
+                 name: "x",
+                 type: "number",
+                 desciption: "x amount" }, { 
+
+                 name: "y",
+                 type: "number",
+                 description: "y amount" }, { 
+
+                 name: "z",
+                 type: "number",
+                 description: "z amount" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }],
+        ROTATE: ["Rotate",
+				 "void",
+				 "rotate unit", [{
+
+                 name: "target",
+                 type: "union",
+                 desciption: "union to move" },{
+
+                 name: "radius",
+                 type: "number",
+                 desciption: "amount" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }],
+
+        ASK: ["Ask",
+				 "string",
+				 "ask user something", [{
+
+                 name: "question",
+                 type: "string",
+                 desciption: "something to say" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }],
+        YES_OR_NO: ["Yes or no",
+				 "boolean",
+				 "ask user something", [{
+
+                 name: "question",
+                 type: "string",
+                 desciption: "something to say" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }],
+        SAY: ["Say",
+				 "void",
+				 "ask user something", [{
+
+                 name: "message",
+                 type: "string",
+                 desciption: "something to say" }],
+
+                 function (a, b, c, d) {
+                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
+                 }]
+	},
+
 	// 블록 관련 설정
 
 	BLOCK_HEIGHT: 15,
@@ -7,10 +235,16 @@ OMNI.Config.Block = {
 	BLOCK_WIDTH_PADDING: 5,
 	BLOCK_FONT: {font: "bold 9px Segoe UI", fill: "#000000"},
 
-	TERMINAL_HEIGHT: 12,
+	TERMINAL_HEIGHT: 9,
 	TERMINAL_MIN_WIDTH: 16,
 	TERMINAL_HITTING_EDGE_WIDTH: 8,
 	TERMINAL_TO_BLOCK_RATIO: 0.4,
+
+	// 가이드라인 관련 설정
+
+	GUIDELINE_LENGTH: 20,
+	GUIDELINE_THICKNESS: 2,
+	GUIDELINE_COLOR: 0xCCCCCC,
 
 	// 파라미터 관련 설정
 
@@ -27,39 +261,13 @@ OMNI.Config.Block = {
 
 	DRAG_EVENT_INTERVAL: 200,
 
-}
-/*
-OMNI.Config.Block = {
+	// 드래그 시 조상 블록들에 적용되는 알파
 
-	// 블록 관련 설정
-
-	BLOCK_HEIGHT: 25,
-	BLOCK_MIN_WIDTH: 30,
-	BLOCK_WIDTH_PADDING: 9,
-	BLOCK_FONT: {font: "bold 12px Arial", fill: "#000000"},
-
-	TERMINAL_HEIGHT: 12,
-	TERMINAL_MIN_WIDTH: 16,
-	TERMINAL_HITTING_EDGE_WIDTH: 8,
-	TERMINAL_TO_BLOCK_RATIO: 0.4,
-
-	// 파라미터 관련 설정
-
-	PARAMETER_HEIGHT: 20,
-	PARAMETER_MIN_WIDTH: 25,
-	PARAMETER_WIDTH_PADDING: 5,
-	PARAMETER_FONT: {font: "12px Arial", fill: "#000000"},
-
-	// 인접한 블록 사이의 최소 여백
-
-	SPACE_ADJACENT_BLOCK: 7,
-
-	// 블록 드래그 이벤트 호출 Interval
-
-	DRAG_EVENT_INTERVAL: 200,
+	ANCESTOR_ALPHA: 0.6
 
 }
-*/
+
+
  /**
  *
  * 코드 블록
@@ -81,11 +289,17 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 	/** 블록 이름 */
 	this._name = name || "undefined";
 
+	this.literal = false;
+	if(name == "String" || name == "Number") {
+		this.literal = true;
+	}
+
 	/** 블록 리턴 타입 */
 	this._returnType = returnType || "void";
 
 	/** 블록 설명 */
 	this._description = (options ? options.description : false) || "";
+	this._
 
 	/** 그래픽스 */
 	this.graphics = new PIXI.DisplayObjectContainer();
@@ -94,7 +308,7 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 	this.graphics.addChild(this.container);
 
 	/** 블록 구성 요소 */
-	this.body = new OMNI.Block.Body(this._name, OMNI.Config.Code.Data.get(returnType).color, this._returnType != "void");
+	this.body = new OMNI.Block.Body(this._name, OMNI.Config.Block.Type.get(returnType).color, this._returnType != "void" && this._returnType != "branch", this.literal);
 
 	this.container.addChild(this.body.graphics);
 
@@ -109,22 +323,42 @@ OMNI.Block.Entity = function (name, returnType, parameters, options) {
 	}
 
 	/** 이 블록의 연결 정보. 다른 블록의 파라미터가 될 수도 있고 라인일 수도 있습니다. */
-	this.connection;
+	this.connectedParameter;
 	this.targetingConnection;
+	this.connectedLine;
+
+	var lastClick = 0;
+    var space = 350;
 
 	// 이벤트 등록 
-	this.body.graphics.mousedown = function (e) { self.onMouseDown(e) };
+	this.body.graphics.mousedown = function (e) { 
+
+		var now = Date.now();
+	    var diff = now - lastClick;
+
+	    event = e.originalEvent;
+
+	    if(event.which === 3 || event.button === 2) {
+	    } else if(lastClick && (diff < space)) {
+	        lastClick = 0;
+	        self.onMouseDoubleDown(e);
+	    } else {
+	        lastClick = now;
+	        self.onMouseDown(e);
+	    }
+	};
 	this.body.graphics.mouseup = function (e) { self.onMouseUp(e) };
 	this.body.graphics.mouseupoutside = function (e) { self.onMouseUp(e) };
 	this.body.graphics.mouseover = function (e) { self.onMouseRollOver(e) };
 	this.body.graphics.mouseout = function (e) { self.onMouseRollOut(e) };
 	this.body.graphics.mousemove = function (e) { self.onMouseMove(e) };
 
+	// 트윈 데이터
 
-	/** 트윈 데이터 */
 	this.tween = new TWEEN.Tween(this.graphics);
 	this.tweenTarget = {
-		x: 0
+		x: 0,
+		y: 0
 	}
 
 	this.containerTween = new TWEEN.Tween(this.container);
@@ -152,23 +386,24 @@ OMNI.Block.Entity.prototype = {
 
     /** 블록의 y 좌표 */
     get y() {
-        return this.graphics.y;
+        return this.tweenTarget.y;
     },
     set y(value) {
-        this.graphics.y = value;
+        this.tweenTarget.y = value;
+        this.updateTween();
     },
     set y_t(value) {    	
         this.graphics.y = value;
     },
 
     /** 왼쪽 돌출부 */
-    get leftProminent() {
-    	return this._leftProminent;
+    get leftProminentWidth() {
+    	return this._leftProminentWidth;
     },
 
      /** 오른족 돌출부 */
-    get rightProminent() {
-    	return this._rightProminent;
+    get rightProminentWidth() {
+    	return this._rightProminentWidth;
     },
 
     /** 블록의 가로 길이 */
@@ -187,6 +422,8 @@ OMNI.Block.Entity.prototype = {
     },
     set name(value) {
         this._name = value;
+        this.body.name = value;
+        this.update();
     },
 
     /** 블록의 리턴 타입 */
@@ -204,6 +441,11 @@ OMNI.Block.Entity.prototype = {
     set description(value) {
         this._description = value;
     },
+
+    /** 그룹의 전체 높이 */
+    get groupHeight() {
+    	return this._groupHeight;
+    }
 }
 
 /**
@@ -211,55 +453,79 @@ OMNI.Block.Entity.prototype = {
  * 블록 간의 연결 상태를 반영하여 블록 내부 요소의 크기를 새로 조정합니다.
  *
  */
-// direction에는 up(0) 과 down(1) 이 있음.
 OMNI.Block.Entity.prototype.update = function (ascending) {
 	
-	// up : 위치 업데이트
+	if (ascending === undefined) {
+		ascending = true;
+	}
+
 	if(ascending) {
-		this._updatePosition();
-	} 
 
-	// down : 크기 업데이트
-	else {
+		this._updateSize();
 
-		this._updateSize();		
+		if (this.connectedLine) {
+			this.connectedLine.update();
+			return;
+		} 
 
-		// 하향 업데이트
-		if (this.connection) {
-			this.connection.block.update(false);
+		else if (this.connectedParameter) {
+			this.connectedParameter.parentBlock.update(true);
 			return;
 		}
+	} 
+
+	else {
+
+		this._updatePosition();
 
 	}
 
-	// 바닥까지 도달했거나 상향 업데이트 중이면 상향 업데이트
 	for (var i = 0; i < this.parameters.length; i++) {
 		var parameter = this.parameters[i];
-		if (parameter.connection) {
-			parameter.connection.update(true);
+		if (parameter.connectedBlock) { 
+			parameter.connectedBlock.update(false);
 		}
 	}
+}
 
+OMNI.Block.Entity.prototype.updateOnlyPosition = function () {
+	
+	this._updatePosition();
+
+
+	for (var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];
+		if (parameter.connectedBlock) { 
+			parameter.connectedBlock.updateOnlyPosition(false);
+		}
+	}
 
 }
 
+
 OMNI.Block.Entity.prototype.updateTween = function () {
+
     if (this.tween) {
+
         this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
-        //this.containerTween.to(this.containerTweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();       
+
     } else {
+
         this.graphics.x = this.tweenTarget.x;
-        //this.container.x = this.containerTweenTarget.x;
+        this.graphics.y = this.tweenTarget.y;
     }
 }
 
 OMNI.Block.Entity.prototype.updateInternalTween = function () {
-    if (this.tween) {
-        //this.tween.to(this.tweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();
+
+    if (this.containerTween) {
+
         this.containerTween.to(this.containerTweenTarget, OMNI.Config.Tween.TIME).easing(OMNI.Config.Tween.EASING).start();       
+   
     } else {
-        //this.graphics.x = this.tweenTarget.x;
+
         this.container.x = this.containerTweenTarget.x;
+
     }
 }
 
@@ -269,14 +535,14 @@ OMNI.Block.Entity.prototype.updateInternalTween = function () {
  */
 OMNI.Block.Entity.prototype._updatePosition = function () {
 
-	if (this.connection) {
+	if (this.connectedParameter) {
 
-		var root = this.connection.graphics.parent ? (this.connection.graphics.parent.parent ?  this.connection.graphics.parent.parent : null) : null;
+		var root = this.connectedParameter.graphics.parent ? (this.connectedParameter.graphics.parent.parent ?  this.connectedParameter.graphics.parent.parent : null) : null;
 
 		if (root) {
 
-			this.x = this.connection.block.x + this.connection.x + (this.connection.width - this.connection.block.width) / 2;
-			this.y = root.y - this.height;
+			this.x = this.connectedParameter.parentBlock.x + this.connectedParameter.x + (this.connectedParameter.width - this.connectedParameter.parentBlock.width) / 2;
+			this.y = this.connectedParameter.parentBlock.y - this.height;
 
 		}
 	}
@@ -288,24 +554,36 @@ OMNI.Block.Entity.prototype._updateSize = function () {
 
 	this.body.width = blockWidthInfo[1];
 
-	this._leftProminent = blockWidthInfo[0];
-	this._rightProminent = blockWidthInfo[2];
+	this._leftProminentWidth = blockWidthInfo[0];
+	this._rightProminentWidth = blockWidthInfo[2];
 
 	this._updateTerminal();
 
 	this.body.height = OMNI.Config.Block.BLOCK_HEIGHT;	
 	if (this.parameters.length > 0) { this.body.height += OMNI.Config.Block.PARAMETER_HEIGHT; }
 
+	this._groupHeight += this.height;
+
 	// 블록 이름이 길다거나 하는 이유로 여백이 남으면 파라미터 간격을 조정합니다.
 
 	var gap = this.body.width - blockWidthInfo[1];
 
 	if (gap > 0 && this.parameters.length > 0) {
-		console.log(this.name)
+		
 		var extendedSpace = (gap + OMNI.Config.Block.SPACE_ADJACENT_BLOCK * (this.parameters.length - 1)) / (this.parameters.length - 1);
 
-		this._updateParameters(extendedSpace);
+
+		if(this.parameters.length == 1) {
+
+			this.parameters[0].x += gap / 2;
+
+		} else {
+
+			
+			this._updateParameters(extendedSpace);
+		}
 	}
+
 
 	this.containerTweenTarget.x = - Math.floor(this.body.width / 2);
 	this.updateInternalTween();
@@ -321,40 +599,46 @@ OMNI.Block.Entity.prototype._updateParameters = function (space) {
 
 	var widthAccumulation = OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
-	var leftProminent = 0;
-	var rightProminent = 0;
+	this._groupHeight = 0;
+
+	var leftProminentWidth = 0;
+	var rightProminentWidth = 0;
 
 	for (var i = 0; i < this.parameters.length; i++) {
 
 		var parameter = this.parameters[i];
 		var parameterWidth;
 
-		if (parameter.connection) {
+		if (parameter.connectedBlock) {
 
-			if (i < 1) {
+			if (this._groupHeight < parameter.connectedBlock.groupHeight) {
+				this._groupHeight = parameter.connectedBlock.groupHeight;
+			}
+
+			if (i < 1 && this.parameters.length > 1) {
 				
-				parameterWidth = (parameter.connection.width + parameter.width) / 2 + parameter.connection.rightProminent;
-				leftProminent = (parameter.connection.width - parameter.width) / 2 + parameter.connection.leftProminent;
-				leftProminent -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
+				parameterWidth = (parameter.connectedBlock.width + parameter.width) / 2 + parameter.connectedBlock.rightProminentWidth;
+				leftProminentWidth = (parameter.connectedBlock.width - parameter.width) / 2 + parameter.connectedBlock.leftProminentWidth;
+				leftProminentWidth -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
 				parameter.x = widthAccumulation;
 
-			} else if (i > this.parameters.length - 2) {
+			} else if (i > this.parameters.length - 2 && this.parameters.length > 1) {
 
-				parameterWidth = (parameter.connection.width + parameter.width) / 2 + parameter.connection.leftProminent;
-				rightProminent = (parameter.connection.width - parameter.width) / 2 + parameter.connection.rightProminent;
-				rightProminent -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
+				parameterWidth = (parameter.connectedBlock.width + parameter.width) / 2 + parameter.connectedBlock.leftProminentWidth;
+				rightProminentWidth = (parameter.connectedBlock.width - parameter.width) / 2 + parameter.connectedBlock.rightProminentWidth;
+				rightProminentWidth -= OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
 				parameter.x = widthAccumulation + parameterWidth - parameter.width;
 
 			} else {
 
-				parameterWidth = parameter.connection.leftProminent + parameter.connection.width + parameter.connection.rightProminent;
-				parameter.x = widthAccumulation + parameter.connection.leftProminent + (parameter.connection.width - parameter.width) / 2;
+				parameterWidth = parameter.connectedBlock.leftProminentWidth + parameter.connectedBlock.width + parameter.connectedBlock.rightProminentWidth;
+				parameter.x = widthAccumulation + parameter.connectedBlock.leftProminentWidth + (parameter.connectedBlock.width - parameter.width) / 2;
 
 			}
 
-			parameter.connection._updateTerminal();
+			parameter.connectedBlock._updateTerminal();
 		}
 
 		else {
@@ -367,9 +651,11 @@ OMNI.Block.Entity.prototype._updateParameters = function (space) {
 		widthAccumulation += parameterWidth + space;
 	}
 
+	this._groupHeight;
+
 	var centerWidth = widthAccumulation - space + OMNI.Config.Block.BLOCK_WIDTH_PADDING;
 
-	return [leftProminent, centerWidth, rightProminent];
+	return [leftProminentWidth, centerWidth, rightProminentWidth];
 }
 
 /**
@@ -377,9 +663,9 @@ OMNI.Block.Entity.prototype._updateParameters = function (space) {
  */
 OMNI.Block.Entity.prototype._updateTerminal = function () {
 
-	if (this.connection) {
+	if (this.connectedParameter) {
 
-		this.body.terminalWidth = this.connection.width;
+		this.body.terminalWidth = this.connectedParameter.width;
 
 	} else {
 
@@ -387,6 +673,31 @@ OMNI.Block.Entity.prototype._updateTerminal = function () {
 
 	}
 }
+
+
+/**
+ * 이 블록과 파라미터를 통해 연결된 모든 조상 블록의 목록을 구합니다.
+ * 
+ * @return {Array} 연결된 모든 조상의 리스트
+ */
+OMNI.Block.Entity.prototype.getAllAncestorBlocks = function (existingBuffer) {
+
+	var buffer = existingBuffer || [];
+
+	buffer.push(this);
+
+	for(var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];
+
+		if (parameter.connectedBlock) {
+			parameter.connectedBlock.getAllAncestorBlocks(buffer);
+		}
+
+	}
+
+	return buffer;
+}
+
 
 /**
  * 이 블록과 하위 블록의 위치를 델타값을 사용하여 업데이트합니다.
@@ -397,11 +708,12 @@ OMNI.Block.Entity.prototype.setGroupDelta = function (deltaX, deltaY) {
 	this.graphics.y += deltaY;
 
 	this.tweenTarget.x += deltaX;
+	this.tweenTarget.y += deltaY;
 
 	for (var i = 0; i < this.parameters.length; i++) {
 		var parameter = this.parameters[i];
-		if (parameter.connection) {
-			parameter.connection.setGroupDelta(deltaX, deltaY);
+		if (parameter.connectedBlock) {
+			parameter.connectedBlock.setGroupDelta(deltaX, deltaY);
 		}
 	}
 }
@@ -432,9 +744,9 @@ OMNI.Block.Entity.prototype.intersect = function(parameter) {
             }
         }
     }
-
-     // Right check
-     /*
+     
+    /*
+    // Right check
     if (p1.x + o1.width > p2.x) {
         if (p1.x + o1.width - OMNI.Config.Block.TERMINAL_HITTING_EDGE_WIDTH < p2.x + o2.width) {
            if (p1.y + o1.height > p2.y) {
@@ -455,8 +767,8 @@ OMNI.Block.Entity.prototype.intersect = function(parameter) {
  */
 OMNI.Block.Entity.prototype.dock = function (parameter) {
 
-	this.connection = parameter;
-	parameter.connection = this;
+	this.connectedParameter = parameter;
+	parameter.connectedBlock = this;
 	
 	this.update();
 }
@@ -467,13 +779,13 @@ OMNI.Block.Entity.prototype.dock = function (parameter) {
  */
 OMNI.Block.Entity.prototype.undock = function () {
 	
-	var connected = this.connection;
+	var connected = this.connectedParameter;
 
-	this.connection.connection = null;
-	this.connection = null;
+	this.connectedParameter.connectedBlock = null;
+	this.connectedParameter = null;
 	
 	this.update();
-	connected.block.update();
+	connected.parentBlock.update();
 
 }
 
@@ -484,7 +796,9 @@ OMNI.Block.Entity.prototype.undock = function () {
  * @param {OMNI.Block.Parameter} parameter - 추가할 파라미터
  */
 OMNI.Block.Entity.prototype.addParameter = function (parameter) {
-	this.addParameterAt(parameter, this.parameters.length);	
+
+	this.addParameterAt(parameter, this.parameters.length);
+
 }
 
 /**
@@ -495,9 +809,12 @@ OMNI.Block.Entity.prototype.addParameter = function (parameter) {
  * @param {int} index - 추가할 파라미터의 인덱스
  */
 OMNI.Block.Entity.prototype.addParameterAt = function (parameter, index) {
-	parameter.block = this;
+
+	parameter.parentBlock = this;
+
 	this.parameters.splice(index, 0, parameter);
 	this.container.addChild(parameter.graphics);
+
 }
 
 /**
@@ -512,19 +829,44 @@ OMNI.Block.Entity.prototype.removeParameter = function (parameter) {
 	var index = this.parameters.indexOf(parameter);
 
 	if (index > -1) {
-		parameter.block = null;
+		parameter.parentBlock = null;
 		this.parameters.splice(index, 1);
 		this.container.removeChild(parameter.graphics);
 	}
+
 }
 
+/** 마우스가 블록 위에 놓였을 때 */
+OMNI.Block.Entity.prototype.onMouseDoubleDown = function (event) {
+	if(this.literal){
+		var value = window.prompt("Please enter a literal value", this.name);
+		if(value == null) {
+			return;
+		}
+		this.name = value;
+	}
+
+}
 
 /** 마우스로 블록을 눌렀을 때 */
 OMNI.Block.Entity.prototype.onMouseDown = function (event) {
-	this._dragging = true;
 
+	this._dragging = true;
 	if (!this._localOriginPosition) { this._localOriginPosition = new PIXI.Point(); }
 	event.getLocalPosition(this.graphics.parent, this._localOriginPosition);
+
+	// void 블록일 경우 가이드라인 활성화
+
+	if (this.returnType == "void") {
+
+		this._movedDeltaX = this._localOriginPosition.x - this.x;
+		this._movedDeltaY = this._localOriginPosition.y - this.height - this.y - 2;
+
+		this.x += this._movedDeltaX;
+		this.y += this._movedDeltaY;
+
+		this.update();
+	}
 
 	this._localOriginPosition.x -= this.x;
 	this._localOriginPosition.y -= this.y;
@@ -540,36 +882,52 @@ OMNI.Block.Entity.prototype.onMouseDown = function (event) {
 	this._prevX = 0;
 	this._prevY = 0;
 
-	this.onDragStart(this);
+	this.onDrag(this);
 	this._intervalId = setInterval(function () {
 
 		if(self.x != self._prevX || self.y != self._prevY) {
-			self.onDragStart(self);
+			self.onDrag(self);
 
 			self._prevX = self.x;
 			self._prevY = self.y;
 		}
 	}, OMNI.Config.Block.DRAG_EVENT_INTERVAL);
+
 }
 
 /** 마우스가 블록을 누르기를 그만두었을 때 */
 OMNI.Block.Entity.prototype.onMouseUp = function (event) {
+
+	if (this.returnType == "void") {
+
+		this.x -= this._movedDeltaX;
+		this.y -= this._movedDeltaY;
+
+		this.update();
+
+	}
+
 	this._dragging = false;
 
-	this.onDragFinish(this);
+	this.onRelease(this);
 
 	// 드래그 이벤트 해제
 	clearInterval(this._intervalId);
+
 }
 
 /** 마우스가 블록 위에 놓였을 때 */
 OMNI.Block.Entity.prototype.onMouseRollOver = function (event) {
-	this.body.highlight(true);
+
+	this.body.highlight = true;
+
 }
 
 /** 마우스가 블록 위에 놓이기를 그만두었을 때 */
 OMNI.Block.Entity.prototype.onMouseRollOut = function (event) {
-	this.body.highlight(false);
+
+	this.body.highlight = false;
+
 }
 
 /** 마우스가 블록 위에서 움직을 때 */
@@ -586,6 +944,7 @@ OMNI.Block.Entity.prototype.onMouseMove = function (event) {
 
 		this.setGroupDelta(deltaX, deltaY);
 	}
+
 }
 
 /**
@@ -596,15 +955,15 @@ OMNI.Block.Entity.prototype.onMouseMove = function (event) {
 OMNI.Block.Entity.prototype.onFocus = function (targetBlock) { }
 
 /**
- * 마우스로 블록을 드래그하기 시작했을 때 (Dispatch 용) 
+ * 마우스로 블록을 드래그 할 때 (Dispatch 용) 
  *
  * @param {OMNI.Block.Entity} - 클릭된 블록
  */
-OMNI.Block.Entity.prototype.onDragStart = function (targetBlock) { }
+OMNI.Block.Entity.prototype.onDrag = function (targetBlock) { }
 
 /**
  * 드래그가 끝났을 때 (Dispatch 용) 
  *
  * @param {OMNI.Block.Entity} - 클릭된 블록
  */
-OMNI.Block.Entity.prototype.onDragFinish = function (targetBlock) { }
+OMNI.Block.Entity.prototype.onRelease = function (targetBlock) { }

@@ -25,7 +25,7 @@ OMNI.Element.HelperLine = function (orientation) {
     this.helpingLine;
 
     // Set initial thickness
-    this._thickness = OMNI.Config.Line.THICKNESS_MINIMUM;
+    this._thickness = OMNI.Config.Line.MIN_THICKNESS;
 
     /** Tween */
     this.tween = new TWEEN.Tween(this.graphics);
@@ -38,9 +38,9 @@ OMNI.Element.HelperLine = function (orientation) {
 
     if (orientation) {
         this.tweenTarget.width = this.thickness;
-        this.tweenTarget.height = OMNI.Config.Line.LENGTH_MINIMUM;
+        this.tweenTarget.height = OMNI.Config.Line.MIN_LENGTH;
     } else {
-        this.tweenTarget.width = OMNI.Config.Line.LENGTH_MINIMUM;
+        this.tweenTarget.width = OMNI.Config.Line.MIN_LENGTH;
         this.tweenTarget.height = this.thickness;
     }
 
