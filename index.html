@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Omni.js v0.2</title>
+    <title>Omni.js v0.3</title>
     <meta charset="utf-8">
     <style>
         body {
@@ -16,11 +16,10 @@
     <script src="./workspace.js"></script>
     <script src="./procedure.js"></script>
     <script src="./line.js"></script>
-    <script src="./element.helperline.js"></script>
-    <script src="./element.arrow.js"></script>
     <script src="./branch.js"></script>
     <script src="./hintspot.js"></script>
-    <script src="./element.block.js"></script>
+    <script src="./element.helperline.js"></script>
+    <script src="./element.arrow.js"></script>
     <script src="./block.entity.js"></script>
     <script src="./block.parameter.js"></script>
     <script src="./block.body.js"></script>
@@ -29,10 +28,9 @@
 </head>
 
 <body>
-
-    <button type="button" onclick="OMNI.Shared.mode = 2;">Block</button>
-    <button type="button" onclick="OMNI.Shared.mode = 1;">Branch</button>
-    <button type="button" onclick="alert('Not yet!')">Loop</button>
+    <button type="button" onclick="OMNI.Shared.workspace.import(window.prompt('Input block data'));">Import</button>
+    <button type="button" onclick="console.log(OMNI.Shared.workspace.export());">Export</button>
+    <button type="button" onclick="console.log(OMNI.Shared.workspace.getScript());">Script</button>
     <br/>
     <script>
         var workspace = new OMNI.Workspace(1200, 620);

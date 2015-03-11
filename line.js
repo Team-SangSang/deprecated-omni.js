@@ -246,6 +246,39 @@ OMNI.Line.prototype.removeElement = function (child) {
     }
 }
 
+OMNI.Line.prototype.getScript = function() {
+    var buffer = "";    
+    for(var i = 0 ; i < this.children.length; i++) {
+        var element = this.children[i];
+        if(element instanceof OMNI.Hintspot){
+            continue;
+        }
+        buffer += element.getScript() + "\n";
+    }
+    return buffer;
+}
+
+OMNI.Line.prototype.export = function() {
+    var extBuf = "";
+    var thisno = OMNI.Shared.lineNo++;
+    var buffer = "l,"+ (thisno);
+    for(var i = 0 ; i < this.children.length; i++) {
+        var element = this.children[i];
+        if(element instanceof OMNI.Hintspot){
+            continue;
+        }
+        var eleExp = element.export();
+        if (element instanceof OMNI.Block.Entity){
+            buffer += ",b:" + eleExp[0];
+        } else if (element instanceof OMNI.Branch){
+            buffer += ",r:" + eleExp[0];
+        }
+        
+        extBuf += eleExp[1] + "|";
+    }
+    return [thisno, extBuf + buffer];    
+}
+
 /**
  * 라인을 최신 상태로 업데이트합니다.
  * 
@@ -461,11 +494,6 @@ OMNI.Line.prototype._showHintspot = function (index) {
         } else if (OMNI.Shared.mode == 2) {
 
             self._hintspot.closeDirectionBar();
-
-            var cc = OMNI.Shared.workspace.addBlock(OMNI.Config.Block.Predefined.MOVE_BY);
-
-            self.addElementAt(cc, index);
-            self._hideHintspot();
         }
     }
 
@@ -484,7 +512,7 @@ OMNI.Line.prototype._hideHintspot = function () {
         this._currentHintSpotIndex = -1;
 
         this._hintspot.hide();
-
+        this._hintspot.closeDirectionBar();
         this.update();
     }
 }

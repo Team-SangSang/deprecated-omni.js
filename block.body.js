@@ -40,7 +40,7 @@ OMNI.Block.Body = function (name, color, hasReturn, literal) {
     } 
 
     else if(this.literal){
-        this._textfield = new PIXI.Text(this._name, {font: "italic 10px Segoe UI", fill: "#0000ff"});
+        this._textfield = new PIXI.Text(this._name, {font: "italic 10px Segoe UI", fill: "#ffffff"});
     }
 
     else {

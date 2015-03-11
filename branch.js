@@ -5,7 +5,7 @@
  * @constructor
  * @param {boolean} orientation - True: Right, False: Left 
  */
-OMNI.Branch = function (orientation) {
+OMNI.Branch = function (orientation, entry, tline, fline) {
 
     var self = this;
 
@@ -16,11 +16,23 @@ OMNI.Branch = function (orientation) {
 
     /* 컨디션 블록 */
     var definition = OMNI.Config.Block.Predefined.BRANCH;
-    this.entryBlock = new OMNI.Block.Entity(definition[0], definition[1], definition[3]);
-
+    if(entry === undefined) {
+        this.entryBlock = new OMNI.Block.Entity(definition[0], definition[1], definition[3],definition[4], {acc:definition[5]});
+    } else {
+        this.entryBlock = entry;
+    }
     /** 라인 */
-    this.trueLine = new OMNI.Line();
-    this.falseLine = new OMNI.Line();
+    if(tline === undefined) {
+        this.trueLine = new OMNI.Line();
+    } else {
+        this.trueLine = tline;
+    }
+    if(fline === undefined) {
+        this.falseLine = new OMNI.Line();
+    } else {
+        this.falseLine = fline;
+    }
+    //console.log(this.trueLine, this.falseLine)
     this.horizontal_top = new OMNI.Element.HelperLine(false);
     this.horizontal_bottom = new OMNI.Element.HelperLine(false);
 
@@ -121,6 +133,24 @@ OMNI.Branch.prototype = {
         this.update();
     }
 
+}
+OMNI.Branch.prototype.getScript = function () {
+    var buff = "if ("+this.entryBlock.getScript()+") {\n";
+    buff += this.trueLine.getScript() + "\n} else {\n";
+    buff += this.falseLine.getScript() + "\n}\n";
+    return buff;
+}
+OMNI.Branch.prototype.export = function () {
+
+    // export for entry block
+    var entryExp = this.entryBlock.export();
+    var trueExp = this.trueLine.export();
+    var falseExp = this.falseLine.export();
+
+    var extBuf = entryExp[1] + "|" + trueExp[1] + "|" + falseExp[1] + "|";
+    var thisno = OMNI.Shared.branchNo ++;
+    var buffer = "r," + thisno + "," + this.orientation + "," + entryExp[0] + "," + trueExp[0] + "," + falseExp[0];    
+    return [thisno, extBuf + buffer];
 }
 
 

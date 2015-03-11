@@ -101,6 +101,195 @@ OMNI.Workspace = function(width, height) {
     animate();
 };
 
+OMNI.Workspace.prototype.getScript = function () {
+
+    var buffer = "";
+
+    for(var i = 0; i < this.procedures.length; i++){
+        buffer += this.procedures[i].getScript() + "\n";
+    }
+
+    return buffer;
+}
+
+OMNI.Workspace.prototype.export = function() {    
+    OMNI.Shared.procedureNo = 0;
+    OMNI.Shared.blockNo = 0;
+    OMNI.Shared.lineNo = 0;
+    OMNI.Shared.branchNo = 0;
+    var buffer = "";
+    for(var i = 0; i < this.procedures.length; i ++) {
+        var procedure = this.procedures[i];
+        var pExp = procedure.export();
+        buffer += pExp[1] + "|";
+    }
+    this.import(buffer);
+    return buffer;
+}
+OMNI.Workspace.prototype.import = function(data) {
+
+    this.procedures = [];
+    this.blocks = [];
+
+    // Initialize layers    
+    for (var i = 0; i < 2; i++) {
+        this.stage.removeChild(this.layer[i]);
+        this.layer[i] = new PIXI.DisplayObjectContainer();
+        this.stage.addChild(this.layer[i]);
+    };
+    this.stage.removeChild(this.layer[2]);
+    this.stage.addChild(this.layer[2]);
+
+    var units = data.split("|");
+    OMNI.Shared.Ims = {block:[], line:[], branch:[], procedure:[]};
+    for(var i = 0; i < units.length; i++){
+        var unit = units[i];
+        if(unit.length < 1) { continue};
+        var chk = unit.split(",");
+        switch(chk[0]) {
+            case "p": // 프로시저
+                OMNI.Shared.Ims.procedure[Number(chk[1])] = {
+                    entry:Number(chk[2]),
+                    line:Number(chk[3])
+                };
+                break;
+            case "l": // 라인
+                var elem = [];
+                for(var j=2; j < chk.length; j++){
+                    var er = chk[j].split(":");
+                    if(er.length != 2) { continue; }
+                    switch(er[0]){
+                        case "b":
+                            elem.push(Number(er[1]));
+                            break;
+                        case "r":
+                            elem.push(Number(er[1]) + 10000);
+                            break;
+                    }
+                }
+                OMNI.Shared.Ims.line[Number(chk[1])] = {
+                    elements:elem
+                };
+                break;
+            case "r": // 브랜치
+                OMNI.Shared.Ims.branch[Number(chk[1])] = {
+                    direction:chk[2] == "true",
+                    entry:Number(chk[3]),
+                    tline:Number(chk[4]),
+                    fline:Number(chk[5])
+                };
+                break;
+            case "b": // 블록                
+                var adc = 0;
+                if(chk[2] == "STRING_VAR" || chk[2] == "NUMBER_VAR" || chk[2] == "STRING" || chk[2] == "NUMBER") {
+                    adc = 1;
+                }
+                var parms = [];
+                for (var j = 3 + adc; j < chk.length; j++){
+                    parms.push(Number(chk[j] != "" ? chk[j] : null));
+                }
+                OMNI.Shared.Ims.block[Number(chk[1])] = {
+                    acc:chk[2],
+                    name:(adc > 0 ? chk[3] : null),
+                    parameters:parms
+                };
+                break;
+            default:
+        }
+    }
+
+    for(var i = 0; i < OMNI.Shared.Ims.procedure.length; i++){
+        this.loadProcedure(i);
+    }
+    this.update();
+
+
+}
+
+OMNI.Workspace.prototype.loadProcedure = function(no) {
+
+    var data = OMNI.Shared.Ims.procedure[no];
+    var entryBlock = this.loadBlock(data.entry);
+    var line = this.loadLine(data.line);
+
+    var procedure = new OMNI.Procedure(entryBlock, line);
+    procedure.parent = this;
+    this.procedures.push(procedure);
+
+    return procedure;
+}
+
+OMNI.Workspace.prototype.loadLine = function(no) {
+    var data = OMNI.Shared.Ims.line[no];
+    var line = new OMNI.Line();
+    this.layer[0].addChild(line.graphics);
+    for(var i =0; i < data.elements.length; i++){
+        var elemno = data.elements[i];
+        if(elemno >= 10000) {
+
+            var branch = this.loadBranch(elemno - 10000);
+            line.addElement(branch);
+        }else{
+            var block = this.loadBlock(elemno);
+            line.addElement(block);
+        }
+    }
+
+    
+    return line;
+}
+
+OMNI.Workspace.prototype.loadBlock = function(no) {
+    var data = OMNI.Shared.Ims.block[no];
+    var block;
+    switch(data.acc){
+        case "STRING_VAR":
+            block = new OMNI.Block.Entity(data.name, "string", [], null, {acc:"STRING_VAR"});            
+            break;
+        case "NUMBER_VAR":
+            block = new OMNI.Block.Entity(data.name, "number", [], null, {acc:"NUMBER_VAR"});
+            break;
+        case "STRING":
+            block = new OMNI.Block.Entity(data.name, "string", [], null, {acc:"STRING", literal:true});
+            break;
+        case "NUMBER":
+            block = new OMNI.Block.Entity(data.name, "number", [], null, {acc:"NUMBER", literal:true});
+            break;
+        default:
+            var def = OMNI.Config.Block.Predefined[data.acc];
+            block = new OMNI.Block.Entity(def[0], def[1], def[3],def[4], {acc:def[5]});
+    }
+
+    this.regBlock(block);
+
+    this.blocks.push(block);
+    this.layer[1].addChild(block.graphics);
+
+    for(var i = 0; i < data.parameters; i++){
+        var param = data.parameters[i];
+        if(param == null) { continue; }
+        var tblock = this.loadBlock(param);
+        tblock.dock(block.parameters[i]);        
+    }
+
+    return block;
+}
+
+OMNI.Workspace.prototype.loadBranch = function(no) {
+
+    var data = OMNI.Shared.Ims.branch[no];
+    var entry = this.loadBlock(data.entry);
+    var tline = this.loadLine(data.tline);
+    var fline = this.loadLine(data.fline);
+    var branch = new OMNI.Branch(data.direction, entry, tline, fline);
+
+    this.layer[0].addChild(branch.horizontal_top.graphics);
+    this.layer[0].addChild(branch.horizontal_bottom.graphics);
+
+    return branch;
+
+}
+
 /**
  * 
  * Update positions of all procedures on the root
@@ -133,9 +322,8 @@ OMNI.Workspace.prototype.update = function() {
  */
 OMNI.Workspace.prototype.addBlock = function(arr) {
         
-    var self = this;
 
-    var block = new OMNI.Block.Entity(arr[0], arr[1], arr[3]);
+    var block = new OMNI.Block.Entity(arr[0], arr[1], arr[3],arr[4], {acc:arr[5]});
     
     block.x = Math.random() * 500 + 100;
     block.y = Math.random() * 500;

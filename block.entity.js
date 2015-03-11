@@ -45,8 +45,8 @@ OMNI.Config.Block = {
                  function (a, b) {
                  	return;
                  }],*/
-        STRING: ["String", "string", "string",[], function () { }],
-        NUMBER: ["Number", "number", "number",[], function () { }],
+        STRING: ["String", "string", "string",[], function () { }, "STRING"],
+        NUMBER: ["Number", "number", "number",[], function () { }, "NUMBER"],
         BRANCH: ["Branch",
 				 "branch",
 				 "Splits the line into two.", [{
@@ -55,25 +55,25 @@ OMNI.Config.Block = {
                  type: "boolean",
                  description: "branch condition" }],
 
-                 function (a, b, c) {
-                 	return "if (" + a + "== true) {\n" + b + "\n} else {\n" + c + "\n}\n";
-                 }],
+                 function (a) {
+                 	return a;
+                 }, "BRANCH"],
 
         INIT: ["Program start",
 				 "void",
 				 "Entry of program.", [],
 
-                 function (a) {
-                 	return "function () {\n" + a + "\n}\n";
-                 }],
+                 function (a, b) {
+                 	return "function () {\n" + b + "\n} ();\n";
+                 }, "INIT"],
 
         CLICKED: ["When clicked",
 				 "void",
 				 "clicked", [],
 
-                 function (a) {
-                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
-                 }],
+                 function (a, b) {
+                 	return "SANGJA.player.api.clicked(function () {\n" + b + "\n});\n";
+                 }, "CLICKED"],
 
         COLLIDED: ["When collided",
 				 "void",
@@ -83,9 +83,9 @@ OMNI.Config.Block = {
                  type: "union",
                  description: "collided object" }],
 
-                 function (a) {
-                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
-                 }],
+                 function (a, b) {
+                 	return "SANGJA.player.api.collided("+ a[0] +", function () {\n" + b + "\n});\n";
+                 }, "COLLIDED"],
         TIMER: ["Every given seconds",
 				 "void",
 				 "clicked", [{
@@ -94,9 +94,9 @@ OMNI.Config.Block = {
                  type: "number",
                  description: "tick time" }],
 
-                 function (a) {
-                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
-                 }],
+                 function (a, b) {
+                 	return "SANGJA.player.api.timer("+ a[0] +", function () {\n" + b + "\n});\n";
+                 }, "TIMER"],
 
         KEY_PRESSED: ["When key pressed",
 				 "void",
@@ -106,29 +106,29 @@ OMNI.Config.Block = {
                  type: "string",
                  description: "pressed key" }],
 
-                 function (a) {
-                 	return "SANGJA.player.api.keyPressed(function (key) {\n" + a + "\n});\n";
-                 }],
+                 function (a, b) {
+                 	return "SANGJA.player.api.keyPressed("+ a[0] +", function () {\n" + b + "\n});\n";
+                 }, "KEY_PRESSED"],
 
         // 사칙연산부터 정의한다!
 
-        SES: ["assign", "void", "set", [{name:"target", type:"string"}, {name:"value", type:"string"}], function () {} ],
-        SEN: ["assign", "void", "set", [{name:"target", type:"number"}, {name:"value", type:"number"}], function () {} ],
-        ADD: ["+", "number", "add", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        SUB: ["-", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        MUL: ["*", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        DIV: ["/", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        MOD: ["mod", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        BIG: [">", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        BGE: [">=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        SML: ["<", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        SME: ["<=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        EQL: ["equal", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        NOT: ["not", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        AND: ["and", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        ORR: ["or", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function () {} ],
-        NTS: ["Number to string", "string", "set", [{name:"Number", type:"number"}], function () {} ],
-		STN: ["String to number", "number", "set", [{name:"String", type:"string"}], function () {} ],
+        SES: ["assign", "void", "set", [{name:"target", type:"string"}, {name:"value", type:"string"}], function (a) { return a[0] + " = " + a[1] + ";"; } , "SES" ],
+        SEN: ["assign", "void", "set", [{name:"target", type:"number"}, {name:"value", type:"number"}], function (a) { return a[0] + " = " + a[1] + ";"; }, "SEN" ],
+        ADD: ["+", "number", "add", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " + " + a[1]; }, "ADD" ],
+        SUB: ["-", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " - " + a[1]; }, "SUB" ],
+        MUL: ["*", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " * " + a[1]; }, "MUL" ],
+        DIV: ["/", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " / " + a[1]; }, "DIV" ],
+        MOD: ["mod", "number", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " % " + a[1]; }, "MOD" ],
+        BIG: [">", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " > " + a[1]; }, "BIG" ],
+        BGE: [">=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " >= " + a[1]; }, "BGE" ],
+        SML: ["<", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " < " + a[1]; }, "SML" ],
+        SME: ["<=", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " <= " + a[1]; }, "SME" ],
+        EQL: ["equal", "boolean", "set", [{name:"A", type:"number"}, {name:"B", type:"number"}], function (a) { return a[0] + " == " + a[1]; }, "EQL" ],
+        NOT: ["not", "boolean", "set", [{name:"A", type:"boolean"}], function (a) { return "!" + a[0]; }, "NOT" ],
+        AND: ["and", "boolean", "set", [{name:"A", type:"boolean"}, {name:"B", type:"boolean"}], function (a) { return a[0] + " && " + a[1]; }, "AND" ],
+        ORR: ["or", "boolean", "set", [{name:"A", type:"boolean"}, {name:"B", type:"boolean"}], function (a) { return a[0] + " || " + a[1]; }, "ORR" ],
+        NTS: ["Number to string", "string", "set", [{name:"Number", type:"number"}], function (a) { return "String("+ a[0] + ")"; }, "NTS" ],
+		STN: ["String to number", "number", "set", [{name:"String", type:"string"}], function (a) { return "Number("+ a[0] + ")"; }, "STN" ],
 
         MOVE_BY: ["Move by",
 				 "void",
@@ -150,9 +150,9 @@ OMNI.Config.Block = {
                  type: "number",
                  description: "z amount" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }],
+                 function (a) {
+                 	return "SANJA.player.api.moveBy(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ");";
+                 }, "MOVE_BY"],
 
         MOVE_TO: ["Move to",
 				 "void",
@@ -174,9 +174,9 @@ OMNI.Config.Block = {
                  type: "number",
                  description: "z amount" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }],
+                 function (a) {
+                 	return "SANJA.player.api.moveTo(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ");";
+                 }, "MOVE_TO"],
         ROTATE: ["Rotate",
 				 "void",
 				 "rotate unit", [{
@@ -189,9 +189,9 @@ OMNI.Config.Block = {
                  type: "number",
                  desciption: "amount" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }],
+                 function (a) {
+                 	return "SANJA.player.api.rotate(" + a[0] + ", " + a[1] + ");";
+                 }, "ROTATE"],
 
         ASK: ["Ask",
 				 "string",
@@ -201,9 +201,9 @@ OMNI.Config.Block = {
                  type: "string",
                  desciption: "something to say" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }],
+                 function (a) {
+                 	return "window.prompt(" + a[0] + ")";
+                 }, "ASK"],
         YES_OR_NO: ["Yes or no",
 				 "boolean",
 				 "ask user something", [{
@@ -212,9 +212,9 @@ OMNI.Config.Block = {
                  type: "string",
                  desciption: "something to say" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }],
+                 function (a) {
+                 	return "window.confirm(" + a[0] + ")";
+                 }, "YES_OR_NO"],
         SAY: ["Say",
 				 "void",
 				 "ask user something", [{
@@ -223,9 +223,9 @@ OMNI.Config.Block = {
                  type: "string",
                  desciption: "something to say" }],
 
-                 function (a, b, c, d) {
-                 	return "SANJA.player.api.moveBy(" + a + ", " + b + ", " + c + ", " + d + ");";
-                 }]
+                 function (a) {
+                 	return "window.alert(" + a[0] + ");";
+                 }, "SAY"]
 	},
 
 	// 블록 관련 설정
@@ -282,25 +282,27 @@ OMNI.Config.Block = {
  * @param {Object} options - 코드 블록에 대한 추가 옵션입니다. 설정 가능한 값: description
  *
  */
-OMNI.Block.Entity = function (name, returnType, parameters, options) {
+OMNI.Block.Entity = function (name, returnType, parameters, targetFunction, options) {
 
 	var self = this;
 
 	/** 블록 이름 */
 	this._name = name || "undefined";
 
-	this.literal = false;
+	this.literal = (options ? options.literal : false) || false;;
 	if(name == "String" || name == "Number") {
 		this.literal = true;
 	}
+
+	this.targetFunction = targetFunction;
+
 
 	/** 블록 리턴 타입 */
 	this._returnType = returnType || "void";
 
 	/** 블록 설명 */
 	this._description = (options ? options.description : false) || "";
-	this._
-
+	this.acc = (options ? options.acc : "") || "";
 	/** 그래픽스 */
 	this.graphics = new PIXI.DisplayObjectContainer();
 
@@ -446,6 +448,66 @@ OMNI.Block.Entity.prototype = {
     get groupHeight() {
     	return this._groupHeight;
     }
+}
+
+OMNI.Block.Entity.prototype.getScript = function () {
+	var pf = [];
+	for(var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];		
+		if(!parameter.connectedBlock) {
+			window.alert("Some blocks are not complete!");
+			pf.push("");
+		}
+		pf.push(parameter.connectedBlock.getScript());
+	}
+
+	if(this.acc == "STRING_VAR" || this.acc == "NUMBER_VAR" || this.acc == "NUMBER"){
+		return this.name;
+	} else if(this.acc == "STRING"){
+		return "\"" + this.name + "\"";
+	}
+	return this.targetFunction(pf);
+}
+
+OMNI.Block.Entity.prototype.getJustParamScript = function () {
+	var pf = [];
+	for(var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];		
+		if(!parameter.connectedBlock) {
+			window.alert("Some blocks are not complete!");
+		}else {
+			pf.push("");
+		}
+		pf.push(parameter.getScript());
+	}
+
+	if(this.acc == "STRING_VAR" || this.acc == "NUMBER_VAR" || this.acc == "NUMBER"){
+		return this.name;
+	} else if(this.acc == "STRING"){
+		return "\"" + this.name + "\"";
+	}
+	return pf;
+}
+
+
+OMNI.Block.Entity.prototype.export = function () {
+	var extBuf = "";
+	var thisno = OMNI.Shared.blockNo ++;
+	var buffer = "b," + thisno + "," + this.acc;
+	if(this.acc == "STRING_VAR" || this.acc == "NUMBER_VAR" || this.acc == "STRING" || this.acc == "NUMBER"){
+		// 리터럴은 문자 이름 추가
+		buffer += "," + this.name;
+	} 
+	for(var i = 0; i < this.parameters.length; i++) {
+		var parameter = this.parameters[i];
+		buffer += ","
+		if(parameter.connectedBlock) {
+			var conblockExp = parameter.connectedBlock.export();
+			extBuf += conblockExp[1] + "|";
+			buffer += conblockExp[0];
+		}
+	}
+	return [thisno, extBuf + buffer];
 }
 
 /**

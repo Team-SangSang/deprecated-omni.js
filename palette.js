@@ -135,6 +135,19 @@ OMNI.Palette = function(workspace) {
 	]);
 
 	this.graphics.interactive = true;
+	this.branch.interactive = true;
+	this.loop.interactive = true;
+	this.branch.mouseover = function(e) { self.branch.alpha = 0.7; }
+	this.branch.mouseout = function(e) { self.branch.alpha = 1; }	
+	this.branch.mousedown = function(e){
+		OMNI.Shared.mode = 1;
+	}
+
+	this.loop.mouseover = function(e) {	self.loop.alpha = 0.7; }
+	this.loop.mouseout = function(e) { self.loop.alpha = 1; }
+	this.loop.mousedown = function(e){
+		OMNI.Shared.mode = 1;
+	}
 
 	initEvent(this.data_up, this.data_down, this.data_page);
 	initEvent(this.variables_up, this.variables_down, this.variables_page);
@@ -241,9 +254,10 @@ OMNI.Palette = function(workspace) {
 			self.varDefList.push(vdef);			
 
 			function createVar (def) {
-				var block = new OMNI.Block.Entity(def[0], def[1], def[3]);
+				var block = new OMNI.Block.Entity(def[0], def[1], def[3], null, {acc:(mode == 0 ? "STRING_VAR" : "NUMBER_VAR")});
 
 				block.onFocus = function (target) {
+					releaseAll(self);
 					closeAllPages(self);
 					container.removeChild(block.graphics);
 					var cc = self.workspace.regBlock(block);					
@@ -292,9 +306,11 @@ OMNI.Palette = function(workspace) {
 			var def = elements[i];
 
 			function createElement (def, x, y) {
-				var block = new OMNI.Block.Entity(def[0], def[1], def[3]);
+				var block = new OMNI.Block.Entity(def[0], def[1], def[3], def[4], {acc:def[5]});
 
 				block.onFocus = function (target) {
+					OMNI.Shared.mode = 2;
+					releaseAll(self);
 					closeAllPages(self);
 					if(isEventPage) {
 						self.workspace.addProcedure(def);

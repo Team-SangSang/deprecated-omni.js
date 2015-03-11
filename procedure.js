@@ -1,12 +1,19 @@
-OMNI.Procedure = function(entryInfo){
+OMNI.Procedure = function(entryInfo, lineInfo){
 
 	/** Parent workspace */
 	this.parent;
 
-    this.entryBlock = new OMNI.Block.Entity(entryInfo[0], entryInfo[1], entryInfo[3], {entry: true});
-
+    if(entryInfo instanceof OMNI.Block.Entity) {
+        this.entryBlock = entryInfo;
+    } else {
+        this.entryBlock = new OMNI.Block.Entity(entryInfo[0], entryInfo[1], entryInfo[3], entryInfo[4], {entry: true, acc:entryInfo[5]});
+    }
 	/** Main line */
-	this.line = new OMNI.Line();
+    if(lineInfo === undefined){
+	    this.line = new OMNI.Line();
+    } else {
+        this.line = lineInfo;
+    } 
     this.line.parent = this;
 
 }
@@ -26,6 +33,22 @@ OMNI.Procedure.prototype = {
         this.line.y = value;
     }
 }
+
+OMNI.Procedure.prototype.getScript = function () {
+    return this.entryBlock.targetFunction(this.entryBlock.getJustParamScript(), this.line.getScript());
+}
+
+OMNI.Procedure.prototype.export = function () {
+    var blockExp = this.entryBlock.export();
+    var lineExp = this.line.export();
+    var thisno = OMNI.Shared.procedureNo ++;
+    
+    var buffer = blockExp[1] + "|" + lineExp[1]+ "|";
+    buffer += "p," + thisno + "," + blockExp[0] + "," + lineExp[0];
+
+    return [thisno, buffer];
+}    
+
 
 OMNI.Procedure.prototype.update = function (ascending) {
 
