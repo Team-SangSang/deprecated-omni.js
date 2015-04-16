@@ -265,7 +265,7 @@ OMNI.Workspace.prototype.loadBlock = function(no) {
     this.blocks.push(block);
     this.layer[1].addChild(block.graphics);
 
-    for(var i = 0; i < data.parameters; i++){
+    for(var i = 0; i < data.parameters.length; i++){
         var param = data.parameters[i];
         if(param == null) { continue; }
         var tblock = this.loadBlock(param);
