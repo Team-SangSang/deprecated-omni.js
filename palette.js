@@ -124,14 +124,19 @@ OMNI.Palette = function(workspace) {
 		OMNI.Config.Block.Predefined.CLICKED,
 		OMNI.Config.Block.Predefined.COLLIDED,
 		OMNI.Config.Block.Predefined.KEY_PRESSED,
-		OMNI.Config.Block.Predefined.TIMER
+		OMNI.Config.Block.Predefined.TIMER,
+		OMNI.Config.Block.Predefined.IS_DOWN,
 	], true);
 	
-	this.union_blocks_page = createPage([]);
+	this.union_blocks_page = createPage([
+		OMNI.Config.Block.Predefined.BLOCK_SELF,
+		OMNI.Config.Block.Predefined.GUBN
+	]);
 	this.union_actions_page = createPage([
 		OMNI.Config.Block.Predefined.MOVE_BY,
 		OMNI.Config.Block.Predefined.MOVE_TO,
-		OMNI.Config.Block.Predefined.ROTATE
+		OMNI.Config.Block.Predefined.ROTATE,
+		OMNI.Config.Block.Predefined.CHECK_COLLISION
 	]);
 
 	this.graphics.interactive = true;
