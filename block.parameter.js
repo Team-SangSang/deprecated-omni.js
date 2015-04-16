@@ -169,3 +169,7 @@ OMNI.Block.Parameter.prototype.onMouseRollOver = function (event) {
 OMNI.Block.Parameter.prototype.onMouseRollOut = function (event) {
 	this.highlight(false);
 }
+
+OMNI.Block.Parameter.prototype.getScript = function() {
+    return this.connectedBlock.getScript();
+}
