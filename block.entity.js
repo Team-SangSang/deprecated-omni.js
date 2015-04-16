@@ -86,7 +86,7 @@ OMNI.Config.Block = {
                  function (a, b) {
                  	return "SANGJA.player.api.collided("+ a[0] +", function () {\n" + b + "\n});\n";
                  }, "COLLIDED"],
-        TIMER: ["Every given seconds",
+        TIMER: ["Miliseconds",
 				 "void",
 				 "clicked", [{
 
@@ -97,7 +97,18 @@ OMNI.Config.Block = {
                  function (a, b) {
                  	return "SANGJA.player.api.timer("+ a[0] +", function () {\n" + b + "\n});\n";
                  }, "TIMER"],
-
+        BLOCK_SELF: ["Self", "union", "self",[], function(a,b,c) {
+        	return "self";
+        }, "SELF"],
+        GUBN: ["Get Union By name", "union", "self",[{name:"name", type:"string", description:""}], function(a,b,c) {
+        	return "self";
+        }, "GUBN"],
+        IS_DOWN: ["Is down?", "boolean", "", [{name:"keycode", type:"number", description:""}], function(a,b,c) {
+        	return "";
+        }, "ISDOWN"],
+        CHECK_COLLISION: ["Check collision", "boolean", "", [{name:"target 1", type:"union", description:""}, {name:"target 2", type:"union", description:""}], function(a,b,c){
+        	return "";
+        }, "CHKC"],
         KEY_PRESSED: ["When key pressed",
 				 "void",
 				 "key pressed", [{
