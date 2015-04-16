@@ -264,11 +264,12 @@ OMNI.Workspace.prototype.loadBlock = function(no) {
 
     this.blocks.push(block);
     this.layer[1].addChild(block.graphics);
-
+    console.log(data.parameters)
     for(var i = 0; i < data.parameters.length; i++){
         var param = data.parameters[i];
-        if(param == null) { continue; }
+        if(param == null || param == 0) { continue; }
         var tblock = this.loadBlock(param);
+
         tblock.dock(block.parameters[i]);        
     }
 
